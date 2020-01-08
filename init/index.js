@@ -1,4 +1,8 @@
+const { baseUrl } = require("../util");
+
 module.exports = async function (context, req) {
+    const api = baseUrl(req.originalUrl);
+    console.log("baseUrl", api);
     context.res = {
         status: 200,
         body: JSON.stringify({
@@ -10,9 +14,9 @@ module.exports = async function (context, req) {
                 { id: 1, name: "admin", rights: ["c", "r", "u", "d"] }
             ],
             api: {
-                getEntries: "/entries",
-                getEntriesByTag: "/tags/{tag}",
-                getTags: "/tags"
+                getEntries: `${api}/entries`,
+                getEntriesByTag: `${api}/tags/{tag}`,
+                getTags: `${api}/tags`
             }
         })
     };

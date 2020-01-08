@@ -1,7 +1,7 @@
 {
-  "name": "",
-  "version": "",
-  "description": "",
+  "name": "blog-server",
+  "version": "0.1.0",
+  "description": "Backend function app for my blog",
   "scripts" : {
     "test": "echo \"No tests yet...\""
   },
