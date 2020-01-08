@@ -16,7 +16,8 @@ module.exports = async function(context, req) {
       api: {
         getEntries: `${api}/entries`,
         getEntriesByTag: `${api}/tags/{tag}`,
-        getTags: `${api}/tags`
+        getTags: `${api}/tags`,
+        saveEntry: `${api}/entry`
       }
     })
   };
