@@ -1,5 +1,4 @@
-const { baseUrl } = require("../util");
-const db = require("../database");
+const { db, baseUrl } = require("../util");
 
 module.exports = async function(context, req) {
   const apiHost = baseUrl(req.originalUrl);

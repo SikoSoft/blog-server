@@ -1,5 +1,4 @@
-const { baseUrl } = require("../util");
-const db = require("../database");
+const { db } = require("../util");
 
 module.exports = async function(context, req) {
   await db.getConnection().then(async connection => {
