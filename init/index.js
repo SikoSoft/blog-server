@@ -6,13 +6,24 @@ module.exports = async function(context, req) {
     role: 1
   };
   const api = {
-    getEntries: `${apiHost}/entries`,
-    getEntriesByTag: `${apiHost}/tags/{tag}`,
-    getTags: `${apiHost}/tags`,
-    saveEntry: `${apiHost}/entry`
+    getEntries: {
+      href: `${apiHost}/entries`,
+      method: "GET"
+    },
+    getEntriesByTag: {
+      href: `${apiHost}/tags/{tag}`,
+      method: "GET"
+    },
+    getTags: {
+      href: `${apiHost}/tags`,
+      method: "GET"
+    },
+    newEntry: {
+      href: `${apiHost}/entry`,
+      method: "POST"
+    }
   };
   await db.getConnection().then(async dbCon => {
-    console.log("got connection");
     await dbCon.query("SELECT * FROM roles").then(async qRes => {
       const roles = qRes.map(row => ({
         id: row.id,
