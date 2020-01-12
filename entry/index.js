@@ -1,11 +1,11 @@
 const { db, getId } = require("../util");
 
 module.exports = async function(context, req) {
-  context.log("METHOD", req.method);
   await db.getConnection().then(async connection => {
     const body =
       typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
     let query = "";
+    let set = "";
     let where = "";
     let fields = ["id", "title", "body", "last_edited"];
     body.last_edited = Math.floor(new Date().getTime() / 1000);
@@ -20,7 +20,9 @@ module.exports = async function(context, req) {
         break;
       case "PUT":
         query = "UPDATE ";
+        set = " SET";
         where = "WHERE id = ?";
+        body.id = context.bindingData.id;
         break;
       case "DELETE":
         query = "DELETE FROM ";
@@ -32,7 +34,10 @@ module.exports = async function(context, req) {
         fields = [];
     }
     query += "entries ";
-    if (fields.length > 0) {
+    if (set) {
+      query += `${set} `;
+      query += fields.map(field => `${field} = ?`).join(", ");
+    } else if (fields.length > 0) {
       query += `(${fields.join(",")}) `;
       query += `VALUES (${[...fields].fill("?").join(",")}) `;
     }
@@ -41,7 +46,6 @@ module.exports = async function(context, req) {
       query += ` ${where}`;
       values.push(context.bindingData.id);
     }
-    context.log("query", query);
     await connection.query(query, values).then(async qRes => {
       context.res = {
         status: 200,
