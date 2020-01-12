@@ -16,7 +16,7 @@ module.exports = async function(context, req) {
               return {
                 ...entry,
                 api: {
-                  update: { href: endpoint, method: "PUT" },
+                  save: { href: endpoint, method: "PUT" },
                   delete: { href: endpoint, method: "DELETE" }
                 }
               };
