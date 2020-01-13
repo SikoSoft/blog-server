@@ -9,7 +9,6 @@ module.exports = async function(context, req) {
       values.push(`${req.query.tag}%`);
     }
     await connection.query(query, values).then(async qRes => {
-      console.log("qRes", qRes);
       const tags = qRes.map(row => row.tag);
       context.res = {
         status: 200,
