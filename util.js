@@ -44,5 +44,10 @@ module.exports = {
         })
         .catch(e => reject(e));
     });
-  }
+  },
+
+  getEndpoint: (endpoint, req) => ({
+    ...endpoint,
+    key: req.headers.key ? req.headers.key : ""
+  })
 };

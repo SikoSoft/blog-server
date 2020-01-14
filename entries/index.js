@@ -1,4 +1,4 @@
-const { db, baseUrl } = require("../util");
+const { db, baseUrl, getEndpoint } = require("../util");
 
 module.exports = async function(context, req) {
   await db.getConnection().then(async connection => {
@@ -30,8 +30,11 @@ module.exports = async function(context, req) {
                       .filter(tagRow => tagRow.entry_id === entry.id)
                       .map(tagRow => tagRow.tag),
                     api: {
-                      save: { href: endpoint, method: "PUT" },
-                      delete: { href: endpoint, method: "DELETE" }
+                      save: getEndpoint({ href: endpoint, method: "PUT" }, req),
+                      delete: getEndpoint(
+                        { href: endpoint, method: "DELETE" },
+                        req
+                      )
                     }
                   };
                 })
