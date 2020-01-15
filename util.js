@@ -1,4 +1,5 @@
 const URL = require("url").URL;
+const db = require("./database");
 
 function pad(x, padding = 2) {
   return x.toString().padStart(padding, "0");
@@ -11,52 +12,42 @@ function shortDate(time) {
   )}`;
 }
 
+function sanitizeTitle(title) {
+  return title
+    .toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^a-z0-9\-]/, "");
+}
+
 module.exports = {
+  db,
+
   baseUrl: urlString => {
     const url = new URL(urlString);
     const pathDirs = url.pathname.split("/");
     return `${url.origin}${pathDirs.slice(0, pathDirs.length - 1).join("/")}`;
   },
 
-  mockEntries: () => {
-    return [
-      {
-        created: 1564948499,
-        title: "testing 123",
-        body: [
-          { insert: "Fuck off" },
-          { attributes: { header: 1 }, insert: "\n" },
-          { insert: "\n" },
-          { attributes: { italic: true }, insert: "pretentious" },
-          { insert: "\n\n" },
-          { attributes: { underline: true }, insert: "blah" },
-          { insert: "\n" }
-        ],
-        tags: ["testing", "blog", "poop"]
-      },
-      {
-        created: 1567880688,
-        title: "Where have all the free thinkers gone?",
-        body: [
-          {
-            attributes: { italic: true },
-            insert:
-              "The web development industry is full of pretentious nitwits who have never had a single original thought in their entire lives."
-          },
-          { insert: "\n\n" },
-          { attributes: { bold: true }, insert: "It needs to be said." },
-          { insert: "\n" }
-        ],
-        tags: ["webdev", "fuck"]
-      }
-    ].map(entry => {
-      return {
-        ...entry,
-        id: `${shortDate(entry.created * 1000)}/${entry.title
-          .toLowerCase()
-          .replace(/ /g, "-")
-          .replace(/[^a-z0-9-]/, "")}`
-      };
+  getId: async title => {
+    return new Promise((resolve, reject) => {
+      db.getConnection()
+        .then(async connection => {
+          let id = sanitizeTitle(title);
+          connection
+            .query("SELECT COUNT(*) AS total FROM entries WHERE id REGEXP ?", [
+              id
+            ])
+            .then(qRes => {
+              resolve(qRes[0].total === 0 ? id : `${id}-${qRes[0].total + 1}`);
+            })
+            .catch(e => reject(e));
+        })
+        .catch(e => reject(e));
     });
-  }
+  },
+
+  getEndpoint: (endpoint, req) => ({
+    ...endpoint,
+    key: req.headers.key ? req.headers.key : ""
+  })
 };
