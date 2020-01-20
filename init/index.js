@@ -33,6 +33,13 @@ module.exports = async function(context, req) {
         method: "POST"
       },
       req
+    ),
+    uploadImage: getEndpoint(
+      {
+        href: `${apiHost}/uploadImage`,
+        method: "POST"
+      },
+      req
     )
   };
   await db.getConnection().then(async dbCon => {
