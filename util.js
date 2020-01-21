@@ -5,7 +5,7 @@ function pad(x, padding = 2) {
   return x.toString().padStart(padding, "0");
 }
 
-function shortDate(time) {
+function shortDate(time = new Date()) {
   const date = new Date(time);
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
     date.getDate()
@@ -21,6 +21,8 @@ function sanitizeTitle(title) {
 
 module.exports = {
   db,
+
+  shortDate,
 
   baseUrl: urlString => {
     const url = new URL(urlString);

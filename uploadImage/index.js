@@ -1,13 +1,13 @@
 const azureStorage = require("azure-storage");
 const multipart = require("parse-multipart");
-const uuid = require("uuid/v4");
+const { shortDate } = require("../util");
 const intoStream = require("into-stream");
 
 const blobService = azureStorage.createBlobService();
 const containerName = "images";
 
 const getBlobName = fileName => {
-  return `${uuid()}/${fileName}`;
+  return `${shortDate()}/${fileName}`;
 };
 
 async function writeBlobContent(blobName, stream, streamLength, contentType) {
