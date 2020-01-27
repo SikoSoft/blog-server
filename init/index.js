@@ -40,6 +40,13 @@ module.exports = async function(context, req) {
         method: "POST"
       },
       req
+    ),
+    useToken: getEndpoint(
+      {
+        href: `${apiHost}/useToken`,
+        method: "POST"
+      },
+      req
     )
   };
   await db.getConnection().then(async dbCon => {
