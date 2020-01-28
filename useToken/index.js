@@ -60,7 +60,7 @@ module.exports = async function(context, req) {
               });
           }
         } else {
-          dbCon
+          await dbCon
             .query(
               "INSERT INTO tokens_invalid_attempts (token, ip, time) VALUES(?, ?, ?)",
               [body.token, ip, now]
