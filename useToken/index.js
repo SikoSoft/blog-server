@@ -7,6 +7,10 @@ const {
 module.exports = async function(context, req) {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
+  const ip = req.headers["x-forwarded-for"]
+    ? req.headers["x-forwarded-for"]
+    : "0.0.0.0";
+  const now = Math.floor(new Date().getTime() / 1000);
   await db.getConnection().then(async dbCon => {
     await dbCon
       .query("SELECT * FROM tokens WHERE token = ?", [body.token])
@@ -33,13 +37,7 @@ module.exports = async function(context, req) {
                 await dbCon
                   .query(
                     "INSERT INTO tokens_consumed (token, ip, time) VALUES(?, ?, ?)",
-                    [
-                      tokenRow.token,
-                      req.headers["x-forwarded-for"]
-                        ? req.headers["x-forwarded-for"]
-                        : "0.0.0.0",
-                      Math.floor(new Date().getTime() / 1000)
-                    ]
+                    [tokenRow.token, ip, now]
                   )
                   .then(async () => {
                     await dbCon
@@ -62,15 +60,22 @@ module.exports = async function(context, req) {
               });
           }
         } else {
-          context.res = {
-            status: 500,
-            headers: {
-              "content-type": "application/json"
-            },
-            body: JSON.stringify({
-              errorCode: ERROR_INVALID_TOKEN
-            })
-          };
+          dbCon
+            .query(
+              "INSERT INTO tokens_invalid_attempts (token, ip, time) VALUES(?, ?, ?)",
+              [body.token, ip, now]
+            )
+            .then(() => {
+              context.res = {
+                status: 500,
+                headers: {
+                  "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                  errorCode: ERROR_INVALID_TOKEN
+                })
+              };
+            });
         }
       });
   });
