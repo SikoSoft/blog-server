@@ -10,7 +10,14 @@ const processEntries = (entries, tags, req) => {
         .map(tagRow => tagRow.tag),
       api: {
         save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-        delete: getEndpoint({ href: endpoint, method: "DELETE" }, req)
+        delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
+        postComment: getEndpoint(
+          {
+            href: `${baseUrl(req.originalUrl)}/postComment/${entry.id}`,
+            method: "POST"
+          },
+          req
+        )
       }
     };
   });
