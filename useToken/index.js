@@ -1,4 +1,4 @@
-const { db, baseUrl, getEndpoint } = require("../util");
+const { db, getIp } = require("../util");
 const {
   ERROR_INVALID_TOKEN,
   ERROR_TOKEN_CONSUMED
@@ -7,9 +7,7 @@ const {
 module.exports = async function(context, req) {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
-  const ip = req.headers["x-forwarded-for"]
-    ? req.headers["x-forwarded-for"]
-    : "0.0.0.0";
+  const ip = getIp(req);
   const now = Math.floor(new Date().getTime() / 1000);
   await db.getConnection().then(async dbCon => {
     await dbCon

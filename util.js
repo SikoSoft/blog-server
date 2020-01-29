@@ -51,5 +51,11 @@ module.exports = {
   getEndpoint: (endpoint, req) => ({
     ...endpoint,
     key: req.headers.key ? req.headers.key : ""
-  })
+  }),
+
+  getIp: req => {
+    return req.headers["x-forwarded-for"]
+      ? req.headers["x-forwarded-for"].replace(/:[0-9]+/, "")
+      : "0.0.0.0";
+  }
 };
