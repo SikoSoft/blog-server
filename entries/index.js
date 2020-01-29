@@ -17,6 +17,13 @@ const processEntries = (entries, tags, req) => {
             method: "POST"
           },
           req
+        ),
+        getComments: getEndpoint(
+          {
+            href: `${baseUrl(req.originalUrl)}/comments/${entry.id}`,
+            method: "GET"
+          },
+          req
         )
       }
     };
