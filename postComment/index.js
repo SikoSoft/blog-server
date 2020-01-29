@@ -4,6 +4,7 @@ module.exports = async function(context, req) {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
 
+  body.message = JSON.stringify(body.message);
   body.entry_id = context.bindingData.id;
   body.time = Math.ceil(new Date().getTime() / 1000);
 
