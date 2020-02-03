@@ -1,4 +1,6 @@
 const URL = require("url").URL;
+const fetch = require("node-fetch");
+const queryString = require("query-string");
 const db = require("./database");
 
 function pad(x, padding = 2) {
@@ -57,5 +59,29 @@ module.exports = {
     return req.headers["x-forwarded-for"]
       ? req.headers["x-forwarded-for"].replace(/:[0-9]+/, "")
       : "0.0.0.0";
+  },
+
+  verifyCaptcha: async (response, ip) => {
+    if (!process.env.RECAPTCHA_SECRET) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      fetch("https://www.google.com/recaptcha/api/siteverify", {
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        body: queryString.stringify({
+          secret: process.env.RECAPTCHA_SECRET,
+          response,
+          remoteip: ip
+        })
+      })
+        .then(response => response.json())
+        .then(json => {
+          resolve(json);
+        })
+        .catch(e => reject(e));
+    });
   }
 };
