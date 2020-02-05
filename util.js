@@ -26,6 +26,16 @@ module.exports = {
 
   shortDate,
 
+  jsonReply: (context, object) => {
+    context.res = {
+      status: 200,
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(object)
+    };
+  },
+
   baseUrl: urlString => {
     const url = new URL(urlString);
     const pathDirs = url.pathname.split("/");
@@ -83,5 +93,13 @@ module.exports = {
         })
         .catch(e => reject(e));
     });
+  },
+
+  getTextFromDelta(delta) {
+    return delta.reduce((accumulator, op) => {
+      if (typeof op.insert === "string") {
+        return accumulator + op.insert;
+      }
+    }, "");
   }
 };

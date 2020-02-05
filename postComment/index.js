@@ -1,5 +1,49 @@
-const { db, verifyCaptcha, getIp } = require("../util");
+const fetch = require("node-fetch");
+const {
+  db,
+  verifyCaptcha,
+  getIp,
+  jsonReply,
+  getTextFromDelta
+} = require("../util");
 const { ERROR_CAPTCHA_FAILED } = require("../errorCodes");
+
+const getSentimentScore = async text => {
+  if (
+    !process.env.AZURE_SENTIMENT_ENDPOINT ||
+    !process.env.AZURE_COGNITIVE_SERVICES_KEY
+  ) {
+    console.log("something isn't defined", text);
+    return Promise.resolve(false);
+  }
+  return new Promise((resolve, reject) => {
+    fetch(process.env.AZURE_SENTIMENT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Ocp-Apim-Subscription-Key": process.env.AZURE_COGNITIVE_SERVICES_KEY,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        documents: [
+          {
+            language: "en",
+            id: 1,
+            text
+          }
+        ]
+      })
+    })
+      .then(response => response.json())
+      .then(json => {
+        console.log("json", json);
+        if (json && json.documents && json.documents.length) {
+          resolve(json.documents[0].score);
+        }
+        resolve(false);
+      })
+      .catch(e => reject(e));
+  });
+};
 
 module.exports = async function(context, req) {
   const body =
@@ -20,14 +64,25 @@ module.exports = async function(context, req) {
                 .join(",")})`,
               values
             )
-            .then(qRes => {
-              context.res = {
-                status: 200,
-                headers: {
-                  "content-type": "application/json"
-                },
-                body: JSON.stringify({})
-              };
+            .then(async qRes => {
+              console.log("qRes", qRes);
+
+              await getSentimentScore(
+                getTextFromDelta(JSON.parse(body.message))
+              ).then(async score => {
+                if (score) {
+                  await connection
+                    .query(
+                      "INSERT INTO comments_scores (comment_id, score) VALUES(?, ?)",
+                      [qRes.insertId, score]
+                    )
+                    .then(async () => {
+                      jsonReply(context, { commentId: qRes.comment_id, score });
+                    });
+                } else {
+                  jsonReply(context, {});
+                }
+              });
             });
         });
       } else {
