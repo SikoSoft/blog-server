@@ -24,6 +24,20 @@ const processEntries = (entries, tags, req) => {
             method: "GET"
           },
           req
+        ),
+        publishComments: getEndpoint(
+          {
+            href: `${baseUrl(req.originalUrl)}/publishComments`,
+            method: "POST"
+          },
+          req
+        ),
+        deleteComments: getEndpoint(
+          {
+            href: `${baseUrl(req.originalUrl)}/deleteComments`,
+            method: "POST"
+          },
+          req
         )
       }
     };
