@@ -47,6 +47,20 @@ module.exports = async function(context, req) {
         method: "POST"
       },
       req
+    ),
+    publishComments: getEndpoint(
+      {
+        href: `${apiHost}/publishComments`,
+        method: "POST"
+      },
+      req
+    ),
+    deleteComments: getEndpoint(
+      {
+        href: `${apiHost}/deleteComments`,
+        method: "POST"
+      },
+      req
     )
   };
   await db.getConnection().then(async dbCon => {
