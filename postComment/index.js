@@ -13,7 +13,6 @@ const getSentimentScore = async text => {
     !process.env.AZURE_SENTIMENT_ENDPOINT ||
     !process.env.AZURE_COGNITIVE_SERVICES_KEY
   ) {
-    console.log("something isn't defined", text);
     return Promise.resolve(false);
   }
   return new Promise((resolve, reject) => {
@@ -35,7 +34,6 @@ const getSentimentScore = async text => {
     })
       .then(response => response.json())
       .then(json => {
-        console.log("json", json);
         if (json && json.documents && json.documents.length) {
           resolve(json.documents[0].score);
         }
@@ -66,10 +64,16 @@ module.exports = async function(context, req) {
             )
             .then(async qRes => {
               console.log("qRes", qRes);
-
               await getSentimentScore(
                 getTextFromDelta(JSON.parse(body.message))
               ).then(async score => {
+                const comment = {
+                  id: qRes.insertId,
+                  entry_id: body.entry_id,
+                  name: body.name,
+                  message: body.message,
+                  time: body.time
+                };
                 if (score) {
                   await connection
                     .query(
@@ -77,10 +81,11 @@ module.exports = async function(context, req) {
                       [qRes.insertId, score]
                     )
                     .then(async () => {
-                      jsonReply(context, { commentId: qRes.comment_id, score });
+                      console.log("stuff to respond", { ...comment, score });
+                      jsonReply(context, { ...comment, score });
                     });
                 } else {
-                  jsonReply(context, {});
+                  jsonReply(context, comment);
                 }
               });
             });
