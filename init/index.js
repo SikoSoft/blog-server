@@ -61,6 +61,13 @@ module.exports = async function(context, req) {
         method: "POST"
       },
       req
+    ),
+    saveSetting: getEndpoint(
+      {
+        href: `${apiHost}/saveSetting`,
+        method: "POST"
+      },
+      req
     )
   };
   await db.getConnection().then(async dbCon => {
@@ -70,17 +77,20 @@ module.exports = async function(context, req) {
         name: row.name,
         rights: ["c", "r", "u", "d"].filter(right => row[right] === 1)
       }));
-      context.res = {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          user,
-          roles,
-          api
-        })
-      };
+      await dbCon.query("SELECT * FROM settings").then(async ([settings]) => {
+        context.res = {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user,
+            roles,
+            settings,
+            api
+          })
+        };
+      });
     });
   });
 };
