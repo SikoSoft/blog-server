@@ -6,9 +6,11 @@ module.exports = async function(context, req) {
 
   await db.getConnection().then(async connection => {
     await connection
-      .query(`UPDATE settings SET ? = ?`, [body.id, body.value])
-      .then(async () => {
-        jsonReply(context, comment);
+      .query(`UPDATE settings SET ${connection.escapeId(body.id)} = ?`, [
+        body.value
+      ])
+      .then(async qRes => {
+        jsonReply(context, qRes.affectedRows);
       });
   });
 };
