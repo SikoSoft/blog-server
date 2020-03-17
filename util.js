@@ -101,5 +101,41 @@ module.exports = {
         return accumulator + op.insert;
       }
     }, "");
+  },
+
+  getSettings: async () => {
+    return new Promise((resolve, reject) => {
+      db.getConnection()
+        .then(connection => {
+          connection.query("SELECT * FROM settings").then(([settings]) => {
+            resolve(settings);
+          });
+        })
+        .catch(error => reject(error));
+    });
+  },
+
+  getSessionRole: async (sessToken, guestRole) => {
+    if (!sessToken) {
+      return Promise.resolve(guestRole);
+    }
+    return new Promise((resolve, reject) => {
+      db.getConnection()
+        .then(connection => {
+          connection
+            .query(
+              "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.token = c.token",
+              [sessToken]
+            )
+            .then(([session]) => {
+              if (session) {
+                resolve(session.role);
+              } else {
+                resolve(guestRole);
+              }
+            });
+        })
+        .catch(error => reject(error));
+    });
   }
 };

@@ -1,3 +1,4 @@
+const { v4 } = require("uuid");
 const { db, getIp } = require("../util");
 const {
   ERROR_INVALID_TOKEN,
@@ -32,10 +33,11 @@ module.exports = async function(context, req) {
                 tokenRow.token
               ])
               .then(async () => {
+                const sessToken = v4();
                 await dbCon
                   .query(
-                    "INSERT INTO tokens_consumed (token, ip, time) VALUES(?, ?, ?)",
-                    [tokenRow.token, ip, now]
+                    "INSERT INTO tokens_consumed (token, ip, time, session) VALUES(?, ?, ?, ?)",
+                    [tokenRow.token, ip, now, sessToken]
                   )
                   .then(async () => {
                     await dbCon
@@ -50,7 +52,8 @@ module.exports = async function(context, req) {
                           },
                           body: JSON.stringify({
                             role: tokenRow.role,
-                            token: roleRes[0].token
+                            sessToken,
+                            authToken: roleRes[0].token
                           })
                         };
                       });
