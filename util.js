@@ -3,6 +3,10 @@ const fetch = require("node-fetch");
 const queryString = require("query-string");
 const db = require("./database");
 
+const state = {
+  session: {}
+};
+
 function pad(x, padding = 2) {
   return x.toString().padStart(padding, "0");
 }
@@ -21,10 +25,103 @@ function sanitizeTitle(title) {
     .replace(/[^a-z0-9\-]/g, "");
 }
 
+async function getSettings() {
+  if (state.settings) {
+    return Promise.resolve(state.settings);
+  }
+  return new Promise((resolve, reject) => {
+    db.getConnection()
+      .then(connection => {
+        connection.query("SELECT * FROM settings").then(([settings]) => {
+          state.settings = settings;
+          resolve(settings);
+        });
+      })
+      .catch(error => reject(error));
+  });
+}
+
+async function getRoleRights() {
+  if (state.rights) {
+    return Promise.resolve(state.rights);
+  }
+  return new Promise((resolve, reject) => {
+    db.getConnection()
+      .then(connection => {
+        connection.query("SELECT * FROM roles_rights").then(rights => {
+          state.rights = rights;
+          resolve(rights);
+        });
+      })
+      .catch(error => reject(error));
+  });
+}
+
+async function getSessionRole(sessToken) {
+  if (state.session[sessToken] && state.session[sessToken].role) {
+    return Promise.resolve(state.session[sessToken].role);
+  }
+  return new Promise((resolve, reject) => {
+    getSettings().then(settings => {
+      if (!sessToken) {
+        resolve(settings.role_guest);
+      }
+      let role = settings.role_guest;
+      db.getConnection()
+        .then(connection => {
+          connection
+            .query(
+              "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.token = c.token",
+              [sessToken]
+            )
+            .then(([session]) => {
+              if (session) {
+                role = session.role;
+              }
+              state.session[sessToken] = state.session[sessToken]
+                ? { ...state.session[sessToken], role }
+                : { role };
+              resolve(role);
+            });
+        })
+        .catch(error => reject(error));
+    });
+  });
+}
+
+async function getSessionRights(sessToken) {
+  if (state.session[sessToken] && state.session[sessToken].rights) {
+    return Promise.resolve(state.session[sessToken].rights);
+  }
+  return new Promise((resolve, reject) => {
+    getRoleRights()
+      .then(rights => {
+        getSessionRole(sessToken).then(role => {
+          const sessionRights = rights
+            .filter(right => role === right.role)
+            .map(right => right.action);
+          state.session[sessToken] = state.session[sessToken]
+            ? { ...state.session[sessToken], rights: sessionRights }
+            : { rights: sessionRights };
+          resolve(sessionRights);
+        });
+      })
+      .catch(error => reject(error));
+  });
+}
+
 module.exports = {
   db,
 
   shortDate,
+
+  getSettings,
+
+  getRoleRights,
+
+  getSessionRole,
+
+  getSessionRights,
 
   jsonReply: (context, object) => {
     context.res = {
@@ -101,41 +198,5 @@ module.exports = {
         return accumulator + op.insert;
       }
     }, "");
-  },
-
-  getSettings: async () => {
-    return new Promise((resolve, reject) => {
-      db.getConnection()
-        .then(connection => {
-          connection.query("SELECT * FROM settings").then(([settings]) => {
-            resolve(settings);
-          });
-        })
-        .catch(error => reject(error));
-    });
-  },
-
-  getSessionRole: async (sessToken, guestRole) => {
-    if (!sessToken) {
-      return Promise.resolve(guestRole);
-    }
-    return new Promise((resolve, reject) => {
-      db.getConnection()
-        .then(connection => {
-          connection
-            .query(
-              "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.token = c.token",
-              [sessToken]
-            )
-            .then(([session]) => {
-              if (session) {
-                resolve(session.role);
-              } else {
-                resolve(guestRole);
-              }
-            });
-        })
-        .catch(error => reject(error));
-    });
   }
 };

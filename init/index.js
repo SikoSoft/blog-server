@@ -3,7 +3,8 @@ const {
   baseUrl,
   getEndpoint,
   getSettings,
-  getSessionRole
+  getSessionRole,
+  getSessionRights
 } = require("../util");
 
 module.exports = async function(context, req) {
@@ -75,33 +76,36 @@ module.exports = async function(context, req) {
   };
 
   await getSettings().then(async settings => {
-    await getSessionRole(req.headers["sess-token"], settings.role_guest).then(
-      async sessionRole => {
-        const user = {
-          role: sessionRole ? sessionRole : settings.role_guest
-        };
-        await db.getConnection().then(async dbCon => {
-          await dbCon.query("SELECT * FROM roles").then(async qRes => {
-            const roles = qRes.map(row => ({
-              id: row.id,
-              name: row.name,
-              rights: ["c", "r", "u", "d"].filter(right => row[right] === 1)
-            }));
-            context.res = {
-              status: 200,
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                user,
-                roles,
-                settings,
-                api
-              })
-            };
+    await getSessionRights(req.headers["sess-token"]).then(async rights => {
+      await getSessionRole(req.headers["sess-token"]).then(
+        async sessionRole => {
+          const user = {
+            role: sessionRole ? sessionRole : settings.role_guest,
+            rights
+          };
+          await db.getConnection().then(async dbCon => {
+            await dbCon.query("SELECT * FROM roles").then(async qRes => {
+              const roles = qRes.map(row => ({
+                id: row.id,
+                name: row.name,
+                rights: ["c", "r", "u", "d"].filter(right => row[right] === 1)
+              }));
+              context.res = {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  user,
+                  roles,
+                  settings,
+                  api
+                })
+              };
+            });
           });
-        });
-      }
-    );
+        }
+      );
+    });
   });
 };
