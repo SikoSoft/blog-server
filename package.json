@@ -1,13 +1,19 @@
 {
   "name": "blog-server",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Backend function app for my blog",
   "scripts": {
     "test": "echo \"No tests yet...\""
   },
   "author": "",
   "dependencies": {
+    "azure-storage": "^2.10.3",
     "dotenv": "^8.2.0",
-    "mariadb": "^2.1.5"
+    "into-stream": "^5.1.1",
+    "mariadb": "^2.1.5",
+    "node-fetch": "^2.6.0",
+    "parse-multipart": "^1.0.4",
+    "query-string": "^6.10.1",
+    "uuid": "^3.4.0"
   }
 }
