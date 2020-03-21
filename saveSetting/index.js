@@ -1,4 +1,4 @@
-const { db, jsonReply } = require("../util");
+const { db, jsonReply, flushState } = require("../util");
 
 module.exports = async function(context, req) {
   const body =
@@ -10,7 +10,11 @@ module.exports = async function(context, req) {
         body.value
       ])
       .then(async qRes => {
-        jsonReply(context, { success: qRes.affectedRows === 1 ? true : false });
+        const success = qRes.affectedRows === 1 ? true : false;
+        if (success) {
+          flushState("settings");
+        }
+        jsonReply(context, { success });
       });
   });
 };

@@ -3,9 +3,11 @@ const fetch = require("node-fetch");
 const queryString = require("query-string");
 const db = require("./database");
 
-const state = {
+const initialState = {
   session: {}
 };
+
+let state = { ...initialState };
 
 function pad(x, padding = 2) {
   return x.toString().padStart(padding, "0");
@@ -198,5 +200,13 @@ module.exports = {
         return accumulator + op.insert;
       }
     }, "");
+  },
+
+  flushState: key => {
+    if (key) {
+      delete state[key];
+    } else {
+      state = { ...initialState };
+    }
   }
 };
