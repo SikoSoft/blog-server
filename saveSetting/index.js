@@ -10,7 +10,7 @@ module.exports = async function(context, req) {
         body.value
       ])
       .then(async qRes => {
-        jsonReply(context, qRes.affectedRows);
+        jsonReply(context, { success: qRes.affectedRows === 1 ? true : false });
       });
   });
 };
