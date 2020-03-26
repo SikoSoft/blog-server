@@ -47,7 +47,9 @@ const processEntries = (entries, tags, req) => {
 module.exports = async function(context, req) {
   await db.getConnection().then(async connection => {
     await connection
-      .query("SELECT * FROM entries ORDER BY created DESC")
+      .query("SELECT * FROM entries WHERE public = ? ORDER BY created DESC", [
+        req.drafts ? 0 : 1
+      ])
       .then(async entries => {
         if (entries.length) {
           let tagQuery = `SELECT * FROM entries_tags WHERE ${[...entries]
