@@ -72,6 +72,13 @@ module.exports = async function(context, req) {
         method: "POST"
       },
       req
+    ),
+    drafts: getEndpoint(
+      {
+        href: `${apiHost}/drafts`,
+        method: "POST"
+      },
+      req
     )
   };
 
