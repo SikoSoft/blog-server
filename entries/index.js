@@ -67,7 +67,11 @@ module.exports = async function(context, req) {
                   "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                  entries: processEntries(entries, tags, req)
+                  [req.drafts ? "drafts" : "entries"]: processEntries(
+                    entries,
+                    tags,
+                    req
+                  )
                 })
               };
             });
@@ -78,7 +82,7 @@ module.exports = async function(context, req) {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              entries: []
+              [req.drafts ? "drafts" : "entries"]: []
             })
           };
         }
