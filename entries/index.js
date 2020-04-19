@@ -1,56 +1,57 @@
-const { db, baseUrl, getEndpoint } = require("../util");
+const { db, baseUrl, getEndpoint, getSettings } = require("../util");
 
 const processEntries = (entries, tags, req) => {
-  return entries.map(entry => {
+  return entries.map((entry) => {
     const endpoint = `${baseUrl(req.originalUrl)}/entry/${entry.id}`;
     return {
       ...entry,
       tags: tags
-        .filter(tagRow => tagRow.entry_id === entry.id)
-        .map(tagRow => tagRow.tag),
+        .filter((tagRow) => tagRow.entry_id === entry.id)
+        .map((tagRow) => tagRow.tag),
       api: {
         save: getEndpoint({ href: endpoint, method: "PUT" }, req),
         delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
         postComment: getEndpoint(
           {
             href: `${baseUrl(req.originalUrl)}/postComment/${entry.id}`,
-            method: "POST"
+            method: "POST",
           },
           req
         ),
         getComments: getEndpoint(
           {
             href: `${baseUrl(req.originalUrl)}/comments/${entry.id}`,
-            method: "GET"
+            method: "GET",
           },
           req
         ),
         publishComments: getEndpoint(
           {
             href: `${baseUrl(req.originalUrl)}/publishComments`,
-            method: "POST"
+            method: "POST",
           },
           req
         ),
         deleteComments: getEndpoint(
           {
             href: `${baseUrl(req.originalUrl)}/deleteComments`,
-            method: "POST"
+            method: "POST",
           },
           req
-        )
-      }
+        ),
+      },
     };
   });
 };
 
-module.exports = async function(context, req) {
-  await db.getConnection().then(async connection => {
-    await connection
-      .query("SELECT * FROM entries WHERE public = ? ORDER BY created DESC", [
-        req.drafts ? 0 : 1
-      ])
-      .then(async entries => {
+module.exports = async function (context, req) {
+  await getSettings().then(async (settings) => {
+    await db.getConnection().then(async (connection) => {
+      const q = `SELECT * FROM entries WHERE public = ? ORDER BY created DESC LIMIT ${
+        context.bindingData.start ? parseInt(context.bindingData.start) : 0
+      }, ${settings.per_load ? settings.per_load : 10}`;
+      console.log(q);
+      await connection.query(q, [req.drafts ? 0 : 1]).then(async (entries) => {
         if (entries.length) {
           let tagQuery = `SELECT * FROM entries_tags WHERE ${[...entries]
             .fill("entry_id = ?")
@@ -58,34 +59,35 @@ module.exports = async function(context, req) {
           await connection
             .query(
               tagQuery,
-              entries.map(entry => entry.id)
+              entries.map((entry) => entry.id)
             )
-            .then(tags => {
+            .then((tags) => {
               context.res = {
                 status: 200,
                 headers: {
-                  "Content-Type": "application/json"
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                   [req.drafts ? "drafts" : "entries"]: processEntries(
                     entries,
                     tags,
                     req
-                  )
-                })
+                  ),
+                }),
               };
             });
         } else {
           context.res = {
             status: 200,
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              [req.drafts ? "drafts" : "entries"]: []
-            })
+              [req.drafts ? "drafts" : "entries"]: [],
+            }),
           };
         }
       });
+    });
   });
 };
