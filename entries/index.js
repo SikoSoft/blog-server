@@ -12,7 +12,8 @@ const getLastEntry = async (connection, query, queryArgs) => {
 
 const processEntries = (entries, tags, req) => {
   return entries.map((entry) => {
-    const endpoint = `${baseUrl(req.originalUrl)}/entry/${entry.id}`;
+    const originalUrl = req.originalUrl.replace(/\/[0-9]+$/, "");
+    const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
     return {
       ...entry,
       tags: tags
@@ -23,28 +24,28 @@ const processEntries = (entries, tags, req) => {
         delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
         postComment: getEndpoint(
           {
-            href: `${baseUrl(req.originalUrl)}/postComment/${entry.id}`,
+            href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
             method: "POST",
           },
           req
         ),
         getComments: getEndpoint(
           {
-            href: `${baseUrl(req.originalUrl)}/comments/${entry.id}`,
+            href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
             method: "GET",
           },
           req
         ),
         publishComments: getEndpoint(
           {
-            href: `${baseUrl(req.originalUrl)}/publishComments`,
+            href: `${baseUrl(originalUrl)}/publishComments`,
             method: "POST",
           },
           req
         ),
         deleteComments: getEndpoint(
           {
-            href: `${baseUrl(req.originalUrl)}/deleteComments`,
+            href: `${baseUrl(originalUrl)}/deleteComments`,
             method: "POST",
           },
           req
