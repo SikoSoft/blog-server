@@ -1,4 +1,4 @@
-const { db, baseUrl, getEndpoint, getSettings } = require("../util");
+const { db, getSettings, processEntry } = require("../util");
 
 const getLastEntry = async (connection, query, queryArgs) => {
   return new Promise((resolve, reject) => {
@@ -7,51 +7,6 @@ const getLastEntry = async (connection, query, queryArgs) => {
       .then((lastEntry) => {
         resolve(lastEntry[0].id);
       });
-  });
-};
-
-const processEntries = (entries, tags, req) => {
-  return entries.map((entry) => {
-    const originalUrl = req.originalUrl.replace(/\/[0-9]+$/, "");
-    const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
-    return {
-      ...entry,
-      tags: tags
-        .filter((tagRow) => tagRow.entry_id === entry.id)
-        .map((tagRow) => tagRow.tag),
-      api: {
-        save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-        delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
-        postComment: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
-            method: "POST",
-          },
-          req
-        ),
-        getComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
-            method: "GET",
-          },
-          req
-        ),
-        publishComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/publishComments`,
-            method: "POST",
-          },
-          req
-        ),
-        deleteComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/deleteComments`,
-            method: "POST",
-          },
-          req
-        ),
-      },
-    };
   });
 };
 
@@ -84,10 +39,10 @@ module.exports = async function (context, req) {
                         "Content-Type": "application/json",
                       },
                       body: JSON.stringify({
-                        [req.drafts ? "drafts" : "entries"]: processEntries(
-                          entries,
-                          tags,
-                          req
+                        [req.drafts
+                          ? "drafts"
+                          : "entries"]: entries.map((entry) =>
+                          processEntry(req, entry, tags)
                         ),
                         end: entries[entries.length - 1].id === lastEntryId,
                       }),
