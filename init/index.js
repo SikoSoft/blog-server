@@ -94,6 +94,13 @@ module.exports = async function (context, req) {
       },
       req
     ),
+    getFilters: getEndpoint(
+      {
+        href: `${apiHost}/getFilters`,
+        method: "GET",
+      },
+      req
+    ),
   };
 
   await getSettings().then(async (settings) => {
