@@ -30,9 +30,13 @@ const syncTags = async (connection, id, tags) => {
 };
 
 const getTags = async (connection, id) => {
-  await connection
-    .query("SELECT * FROM entries_tags WHERE entry_id = ?", [id])
-    .then((tags) => {});
+  return new Promise((resolve, reject) => {
+    connection
+      .query("SELECT * FROM entries_tags WHERE entry_id = ?", [id])
+      .then((tags) => {
+        resolve(tags);
+      });
+  }).catch((e) => reject(e));
 };
 
 module.exports = async function (context, req) {
