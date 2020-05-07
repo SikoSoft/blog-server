@@ -58,7 +58,7 @@ module.exports = async function (context, req) {
           .query(
             `SELECT * FROM entries WHERE ${[...filteredByTags]
               .fill("id = ?")
-              .join(" || ")}`,
+              .join(" || ")} ORDER BY created DESC`,
             filteredByTags
           )
           .then(async (entries) => {
