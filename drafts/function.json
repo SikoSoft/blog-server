@@ -1,12 +1,14 @@
 {
   "bindings": [
     {
-      "authLevel": "anonymous",
+      "authLevel": "function",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get"],
-      "route": "entries/{start?}"
+      "methods": [
+        "get",
+        "post"
+      ]
     },
     {
       "type": "http",
