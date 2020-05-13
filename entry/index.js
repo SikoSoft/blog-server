@@ -61,6 +61,7 @@ module.exports = async function (context, req) {
         query = "UPDATE ";
         set = " SET";
         where = "WHERE id = ?";
+        fields.push("id");
         body.id = context.bindingData.id;
         break;
       case "DELETE":
@@ -82,7 +83,9 @@ module.exports = async function (context, req) {
       query += `(${fields.join(",")}) `;
       query += `VALUES (${[...fields].fill("?").join(",")}) `;
     }
-    values = fields.map((field) => body[field]);
+    values = fields.map((field) =>
+      field === "id" && req.method === "PUT" ? body.newId : body[field]
+    );
     if (where) {
       query += ` ${where}`;
       values.push(context.bindingData.id);
@@ -95,11 +98,15 @@ module.exports = async function (context, req) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(
-            processEntry(req, { id: body.id, ...entry }, tags ? tags : [])
+            processEntry(
+              req,
+              { id: req.method === "PUT" ? body.newId : body.id, ...entry },
+              tags ? tags : []
+            )
           ),
         };
       };
-      if (req.method === "PUT" || req.method === "DELETE") {
+      if (req.method !== "GET") {
         await syncTags(connection, body.id, body.tags).then(() => {
           sendResponse();
         });
