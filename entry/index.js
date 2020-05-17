@@ -67,6 +67,7 @@ module.exports = async function (context, req) {
       case "DELETE":
         query = "DELETE FROM ";
         where = "WHERE id = ?";
+        body.id = context.bindingData.id;
         fields = [];
         break;
       default:
