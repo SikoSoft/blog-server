@@ -13,6 +13,12 @@ module.exports = {
         password: process.env.DB_PASS,
         database: process.env.DB_NAME,
       });
+      connection.then((openConnection) => {
+        openConnection.on("error", (error) => {
+          console.log("Database connection error", error);
+          connection = false;
+        });
+      });
     }
     return connection;
   },
