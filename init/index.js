@@ -108,6 +108,13 @@ module.exports = async function (context, req) {
       },
       req
     ),
+    getEntriesByTag: getEndpoint(
+      {
+        href: `${apiHost}/tag/{tag}`,
+        method: "GET",
+      },
+      req
+    ),
   };
 
   await getSettings().then(async (settings) => {
