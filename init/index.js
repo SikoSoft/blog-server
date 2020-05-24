@@ -19,7 +19,7 @@ module.exports = async function (context, req) {
     ),
     getDraft: getEndpoint(
       {
-        href: `${apiHost}/draft/{id}`,
+        href: `${apiHost}/entry/{id}`,
         method: "GET",
       },
       req
