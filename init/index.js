@@ -19,7 +19,7 @@ module.exports = async function (context, req) {
     ),
     getDraft: getEndpoint(
       {
-        href: `${apiHost}/draft/{id}`,
+        href: `${apiHost}/entry/{id}`,
         method: "GET",
       },
       req
@@ -104,6 +104,13 @@ module.exports = async function (context, req) {
     getEntriesByFilter: getEndpoint(
       {
         href: `${apiHost}/filter/{filter}`,
+        method: "GET",
+      },
+      req
+    ),
+    getEntriesByTag: getEndpoint(
+      {
+        href: `${apiHost}/tag/{tag}`,
         method: "GET",
       },
       req

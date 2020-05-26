@@ -218,9 +218,7 @@ module.exports = {
 
   processEntry: (req, entry, tags) => {
     const originalUrl = req.originalUrl.replace(/(\/[0-9]+$|entry\/)/, "");
-    const endpoint = `${baseUrl(originalUrl)}/${
-      entry.public === 1 ? "entry" : "draft"
-    }/${entry.id}`;
+    const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
     return {
       ...entry,
       tags: tags
