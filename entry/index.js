@@ -1,4 +1,4 @@
-const { db, getId, processEntry } = require("../util");
+const { db, getId, processEntry, jsonReply } = require("../util");
 
 const syncTags = async (connection, id, tags) => {
   return new Promise((resolve, reject) => {
@@ -43,6 +43,14 @@ module.exports = async function (context, req) {
   await db.getConnection().then(async (connection) => {
     const body =
       typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
+
+    if (["POST", "PUT"].includes(req.method)) {
+      if (!body.title) {
+        return jsonReply(context, { errorCode: 6 });
+      } else if (!body.body) {
+        return jsonReply(context, { errorCode: 7 });
+      }
+    }
     let query = "";
     let set = "";
     let where = "";
