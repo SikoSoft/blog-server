@@ -115,6 +115,13 @@ module.exports = async function (context, req) {
       },
       req
     ),
+    findEntry: getEndpoint(
+      {
+        href: `${apiHost}/find`,
+        methoid: "GET",
+      },
+      req
+    ),
   };
 
   await getSettings().then(async (settings) => {
