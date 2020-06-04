@@ -1,4 +1,4 @@
-const { db, jsonReply } = require("../util.js");
+const { db, jsonReply, processEntry } = require("../util.js");
 
 module.exports = async function (context, req) {
   await db.getConnection().then(async (connection) => {
@@ -62,7 +62,21 @@ module.exports = async function (context, req) {
             filteredByTags
           )
           .then(async (entries) => {
-            jsonReply(context, { entries });
+            let tagQuery = `SELECT * FROM entries_tags WHERE ${[...entries]
+              .fill("entry_id = ?")
+              .join(" || ")}`;
+            await connection
+              .query(
+                tagQuery,
+                entries.map((entry) => entry.id)
+              )
+              .then((tags) => {
+                jsonReply(context, {
+                  entries: entries.map((entry) =>
+                    processEntry(req, entry, tags)
+                  ),
+                });
+              });
           });
       });
   });

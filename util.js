@@ -217,7 +217,10 @@ module.exports = {
   },
 
   processEntry: (req, entry, tags) => {
-    const originalUrl = req.originalUrl.replace(/(\/[0-9]+$|entry\/)/, "");
+    const originalUrl = req.originalUrl.replace(
+      /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
+      ""
+    );
     const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
     return {
       ...entry,
