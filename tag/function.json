@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["get"],
-      "route": "tag/{tag}"
+      "route": "tag/{tag}/{start?}"
     },
     {
       "type": "http",
