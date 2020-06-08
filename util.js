@@ -262,4 +262,16 @@ module.exports = {
       },
     };
   },
+
+  getLastEntry: async (query, queryArgs) => {
+    return new Promise((resolve) => {
+      db.getConnection().then((connection) => {
+        connection
+          .query(`${query} ORDER BY created ASC LIMIT 1`, queryArgs)
+          .then((lastEntry) => {
+            resolve(lastEntry[0].id);
+          });
+      });
+    });
+  },
 };
