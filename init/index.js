@@ -9,121 +9,33 @@ const {
 
 module.exports = async function (context, req) {
   const apiHost = baseUrl(req.originalUrl);
-  const api = {
-    getEntry: getEndpoint(
+  const api = {};
+  [
+    ["getEntry", "entry/{id}", "GET"],
+    ["getDraft", "entry/{id}", "GET"],
+    ["getEntries", "entries", "GET"],
+    ["getEntriesByTag", "tag/{tag}", "GET"],
+    ["getTags", "tags", "GET"],
+    ["newEntry", "entry", "POST"],
+    ["uploadImage", "uploadImage", "POST"],
+    ["useToken", "useToken", "POST"],
+    ["publishComments", "publishComments", "POST"],
+    ["deleteComments", "deleteComments", "POST"],
+    ["saveSetting", "saveSetting", "POST"],
+    ["getDrafts", "drafts", "GET"],
+    ["getFilters", "getFilters", "GET"],
+    ["getEntriesByFilter", "filter/{filter}", "GET"],
+    ["getEntriesByTag", "tag/{tag}", "GET"],
+    ["findEntry", "find", "GET"],
+  ].forEach((endpoint) => {
+    api[endpoint[0]] = getEndpoint(
       {
-        href: `${apiHost}/entry/{id}`,
-        method: "GET",
+        href: `${apiHost}/${endpoint[1]}`,
+        method: endpoint[2],
       },
       req
-    ),
-    getDraft: getEndpoint(
-      {
-        href: `${apiHost}/entry/{id}`,
-        method: "GET",
-      },
-      req
-    ),
-    getEntries: getEndpoint(
-      {
-        href: `${apiHost}/entries`,
-        method: "GET",
-      },
-      req
-    ),
-    getEntriesByTag: getEndpoint(
-      {
-        href: `${apiHost}/tags/{tag}`,
-        method: "GET",
-      },
-      req
-    ),
-    getTags: getEndpoint(
-      {
-        href: `${apiHost}/tags`,
-        method: "GET",
-      },
-      req
-    ),
-    newEntry: getEndpoint(
-      {
-        href: `${apiHost}/entry`,
-        method: "POST",
-      },
-      req
-    ),
-    uploadImage: getEndpoint(
-      {
-        href: `${apiHost}/uploadImage`,
-        method: "POST",
-      },
-      req
-    ),
-    useToken: getEndpoint(
-      {
-        href: `${apiHost}/useToken`,
-        method: "POST",
-      },
-      req
-    ),
-    publishComments: getEndpoint(
-      {
-        href: `${apiHost}/publishComments`,
-        method: "POST",
-      },
-      req
-    ),
-    deleteComments: getEndpoint(
-      {
-        href: `${apiHost}/deleteComments`,
-        method: "POST",
-      },
-      req
-    ),
-    saveSetting: getEndpoint(
-      {
-        href: `${apiHost}/saveSetting`,
-        method: "POST",
-      },
-      req
-    ),
-    getDrafts: getEndpoint(
-      {
-        href: `${apiHost}/drafts`,
-        method: "POST",
-      },
-      req
-    ),
-    getFilters: getEndpoint(
-      {
-        href: `${apiHost}/getFilters`,
-        method: "GET",
-      },
-      req
-    ),
-    getEntriesByFilter: getEndpoint(
-      {
-        href: `${apiHost}/filter/{filter}`,
-        method: "GET",
-      },
-      req
-    ),
-    getEntriesByTag: getEndpoint(
-      {
-        href: `${apiHost}/tag/{tag}`,
-        method: "GET",
-      },
-      req
-    ),
-    findEntry: getEndpoint(
-      {
-        href: `${apiHost}/find`,
-        methoid: "GET",
-      },
-      req
-    ),
-  };
-
+    );
+  });
   await getSettings().then(async (settings) => {
     await getSessionRights(req.headers["sess-token"]).then(async (rights) => {
       await getSessionRole(req.headers["sess-token"]).then(
