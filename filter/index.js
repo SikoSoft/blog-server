@@ -35,6 +35,11 @@ module.exports = async function (context, req) {
             });
         });
       } else if (req.method === "DELETE") {
+        await connection
+          .query("DELETE FROM filters WHERE id = ?", [context.bindingData.id])
+          .then(async (res) => {
+            jsonReply(context, { success: res.affectedRows === 1 });
+          });
       } else {
         await connection
           .query("SELECT * FROM filters_rules WHERE filter_id = ?", [
