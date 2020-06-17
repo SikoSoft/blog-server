@@ -17,7 +17,7 @@ module.exports = async function (context, req) {
     ["getEntriesByTag", "tag/{tag}", "GET"],
     ["getTags", "tags", "GET"],
     ["newEntry", "entry", "POST"],
-    ["uploadImage", "uploadImage", "POST"],
+    ["uploadImage", "uploadImage/{type}", "POST"],
     ["useToken", "useToken", "POST"],
     ["publishComments", "publishComments", "POST"],
     ["deleteComments", "deleteComments", "POST"],
