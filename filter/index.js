@@ -14,9 +14,10 @@ module.exports = async function (context, req) {
       if (req.method === "POST") {
         await db.getConnection().then(async (connection) => {
           await connection
-            .query("INSERT INTO filters (id, label) VALUES(?, ?)", [
+            .query("INSERT INTO filters (id, label, image) VALUES(?, ?, ?)", [
               body.id,
               body.label,
+              body.image,
             ])
             .then(async (res) => {
               jsonReply(context, { success: res.affectedRows === 1 });
@@ -25,11 +26,10 @@ module.exports = async function (context, req) {
       } else if (req.method === "PUT") {
         await db.getConnection().then(async (connection) => {
           await connection
-            .query("UPDATE filters SET id = ?, label = ? WHERE id = ?", [
-              body.newId,
-              body.label,
-              body.id,
-            ])
+            .query(
+              "UPDATE filters SET id = ?, label = ?, image = ? WHERE id = ?",
+              [body.newId, body.label, body.image, body.id]
+            )
             .then(async (res) => {
               jsonReply(context, { success: res.affectedRows === 1 });
             });
