@@ -30,6 +30,7 @@ module.exports = async function (context, req) {
     ["newFilter", "filter", "POST"],
     ["updateFilter", "filter/{filter}", "PUT"],
     ["deleteFilter", "filter/{filter}", "DELETE"],
+    ["saveFilterOrder", "saveFilterOrder", "PUT"],
   ].forEach((endpoint) => {
     api[endpoint[0]] = getEndpoint(
       {
