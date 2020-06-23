@@ -24,10 +24,7 @@ module.exports = async function (context, req) {
         });
     } else if (req.method === "DELETE") {
       await connection
-        .query(
-          "DELETE FROM filters_rules WHERE filter_id = ? && type = ? && value = ? && operator = ?",
-          [context.bindingData.entryId, body.type, body.value, body.operator]
-        )
+        .query("DELETE FROM filters_rules WHERE id = ?", [body.id])
         .then(async () => {
           jsonReply(context, { success: true });
         });
