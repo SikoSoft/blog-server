@@ -10,8 +10,8 @@ module.exports = async function (context, req) {
           "INSERT INTO filters_rules (filter_id, type, value, operator) VALUES(?, ?, ?, ?)",
           [context.bindingData.entryId, body.type, body.value, body.operator]
         )
-        .then(async () => {
-          jsonReply(context, { success: true });
+        .then(async (res) => {
+          jsonReply(context, { id: res.insertId, success: true });
         });
     } else if (req.method === "PUT") {
       await connection
