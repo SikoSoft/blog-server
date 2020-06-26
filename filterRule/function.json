@@ -5,8 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get"],
-      "route": "tag/{tag}/{start?}"
+      "methods": ["put", "post", "delete"],
+      "route": "filterRule/{entryId}"
     },
     {
       "type": "http",
