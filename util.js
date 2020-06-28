@@ -216,7 +216,7 @@ module.exports = {
     }
   },
 
-  processEntry: (req, entry, tags) => {
+  processEntry: (req, entry, tags = [], furtherReading = []) => {
     const originalUrl = req.originalUrl.replace(
       /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
       ""
@@ -224,6 +224,9 @@ module.exports = {
     const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
     return {
       ...entry,
+      furtherReading: furtherReading.filter(
+        (furtherReadingRow) => furtherReadingRow.entry_id === entry.id
+      ),
       tags: tags
         .filter((tagRow) => tagRow.entry_id === entry.id)
         .map((tagRow) => tagRow.tag),
