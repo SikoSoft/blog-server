@@ -277,4 +277,26 @@ module.exports = {
       });
     });
   },
+
+  getEntriesTags: async () => {
+    return new Promise((resolve) => {
+      return db.getConnection().then(async (connection) => {
+        await connection
+          .query("SELECT * FROM entries_tags ORDER BY entry_id, tag")
+          .then(async (tagRows) => {
+            const entriesTags = {};
+            tagRows.forEach((tagRow) => {
+              entriesTags[tagRow.entry_id] = [
+                ...(entriesTags[tagRow.entry_id]
+                  ? entriesTags[tagRow.entry_id]
+                  : []),
+                tagRow.tag,
+              ];
+            });
+            console.log("entriesTags", entriesTags);
+            resolve(entriesTags);
+          });
+      });
+    });
+  },
 };
