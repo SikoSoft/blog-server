@@ -125,6 +125,32 @@ async function getSessionRights(sessToken) {
   });
 }
 
+async function getEntriesTags() {
+  if (state.entriesTags) {
+    return Promise.resolve(state.entriesTags);
+  }
+  return new Promise((resolve) => {
+    return db.getConnection().then(async (connection) => {
+      await connection
+        .query("SELECT * FROM entries_tags ORDER BY entry_id, tag")
+        .then(async (tagRows) => {
+          const entriesTags = {};
+          tagRows.forEach((tagRow) => {
+            entriesTags[tagRow.entry_id] = [
+              ...(entriesTags[tagRow.entry_id]
+                ? entriesTags[tagRow.entry_id]
+                : []),
+              tagRow.tag,
+            ];
+          });
+          console.log("entriesTags", entriesTags);
+          state.entriesTags = entriesTags;
+          resolve(entriesTags);
+        });
+    });
+  });
+}
+
 module.exports = {
   db,
 
@@ -141,6 +167,8 @@ module.exports = {
   getSessionRole,
 
   getSessionRights,
+
+  getEntriesTags,
 
   jsonReply: (context, object) => {
     context.res = {
@@ -216,20 +244,19 @@ module.exports = {
     }
   },
 
-  processEntry: (req, entry, tags = [], furtherReading = []) => {
+  processEntry: async (req, entry) => {
+    return new Promise((resolve) => {
     const originalUrl = req.originalUrl.replace(
       /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
       ""
     );
+    const tags = await getEntriesTags();
     const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
-    return {
+    //console.log("returning entry; here are tags", tags);
+    resolve({
       ...entry,
-      furtherReading: furtherReading.filter(
-        (furtherReadingRow) => furtherReadingRow.entry_id === entry.id
-      ),
-      tags: tags
-        .filter((tagRow) => tagRow.entry_id === entry.id)
-        .map((tagRow) => tagRow.tag),
+      furtherReading: [],
+      tags,
       api: {
         view: getEndpoint({ href: endpoint, method: "GET" }, req),
         save: getEndpoint({ href: endpoint, method: "PUT" }, req),
@@ -263,7 +290,8 @@ module.exports = {
           req
         ),
       },
-    };
+    });
+  });
   },
 
   getLastEntry: async (query, queryArgs) => {
@@ -273,28 +301,6 @@ module.exports = {
           .query(`${query} ORDER BY created ASC LIMIT 1`, queryArgs)
           .then((lastEntry) => {
             resolve(lastEntry[0].id);
-          });
-      });
-    });
-  },
-
-  getEntriesTags: async () => {
-    return new Promise((resolve) => {
-      return db.getConnection().then(async (connection) => {
-        await connection
-          .query("SELECT * FROM entries_tags ORDER BY entry_id, tag")
-          .then(async (tagRows) => {
-            const entriesTags = {};
-            tagRows.forEach((tagRow) => {
-              entriesTags[tagRow.entry_id] = [
-                ...(entriesTags[tagRow.entry_id]
-                  ? entriesTags[tagRow.entry_id]
-                  : []),
-                tagRow.tag,
-              ];
-            });
-            console.log("entriesTags", entriesTags);
-            resolve(entriesTags);
           });
       });
     });
