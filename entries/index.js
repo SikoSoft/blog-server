@@ -1,4 +1,10 @@
-const { db, getSettings, processEntry, getLastEntry } = require("../util");
+const {
+  db,
+  getSettings,
+  processEntry,
+  getLastEntry,
+  getEntriesTags,
+} = require("../util");
 
 module.exports = async function (context, req) {
   await getSettings().then(async (settings) => {
@@ -11,32 +17,27 @@ module.exports = async function (context, req) {
         }, ${settings.per_load ? settings.per_load : 10}`;
         await connection
           .query(`${query} ORDER BY created DESC ${limit}`, queryArgs)
-          .then(async (entries) => {
-            if (entries.length) {
-              let tagQuery = `SELECT * FROM entries_tags WHERE ${[...entries]
-                .fill("entry_id = ?")
-                .join(" || ")}`;
-              await connection
-                .query(
-                  tagQuery,
-                  entries.map((entry) => entry.id)
-                )
-                .then((tags) => {
-                  context.res = {
-                    status: 200,
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      [req.drafts
-                        ? "drafts"
-                        : "entries"]: entries.map((entry) =>
-                        processEntry(req, entry, tags)
-                      ),
-                      end: entries[entries.length - 1].id === lastEntryId,
-                    }),
-                  };
-                });
+          .then(async (rawEntries) => {
+            if (rawEntries.length) {
+              const processedEntries = rawEntries.map((entry) =>
+                processEntry(req, entry)
+              );
+              await Promise.all(processedEntries);
+              const entries = [];
+              await processedEntries.forEach(async (entry) => {
+                await entry.then((data) => entries.push(data));
+              });
+
+              context.res = {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  [req.drafts ? "drafts" : "entries"]: entries,
+                  end: rawEntries[rawEntries.length - 1].id === lastEntryId,
+                }),
+              };
             } else {
               context.res = {
                 status: 200,

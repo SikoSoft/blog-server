@@ -130,10 +130,10 @@ async function getEntriesTags() {
     return Promise.resolve(state.entriesTags);
   }
   return new Promise((resolve) => {
-    return db.getConnection().then(async (connection) => {
-      await connection
+    db.getConnection().then((connection) => {
+      connection
         .query("SELECT * FROM entries_tags ORDER BY entry_id, tag")
-        .then(async (tagRows) => {
+        .then((tagRows) => {
           const entriesTags = {};
           tagRows.forEach((tagRow) => {
             entriesTags[tagRow.entry_id] = [
@@ -245,53 +245,52 @@ module.exports = {
   },
 
   processEntry: async (req, entry) => {
-    return new Promise((resolve) => {
-    const originalUrl = req.originalUrl.replace(
-      /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
-      ""
-    );
-    const tags = await getEntriesTags();
-    const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
-    //console.log("returning entry; here are tags", tags);
-    resolve({
-      ...entry,
-      furtherReading: [],
-      tags,
-      api: {
-        view: getEndpoint({ href: endpoint, method: "GET" }, req),
-        save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-        delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
-        postComment: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
-            method: "POST",
-          },
-          req
-        ),
-        getComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
-            method: "GET",
-          },
-          req
-        ),
-        publishComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/publishComments`,
-            method: "POST",
-          },
-          req
-        ),
-        deleteComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/deleteComments`,
-            method: "POST",
-          },
-          req
-        ),
-      },
+    return new Promise(async (resolve) => {
+      const originalUrl = req.originalUrl.replace(
+        /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
+        ""
+      );
+      const tags = await getEntriesTags();
+      const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
+      resolve({
+        ...entry,
+        furtherReading: [],
+        tags: tags[entry.id] ? tags[entry.id] : [],
+        api: {
+          view: getEndpoint({ href: endpoint, method: "GET" }, req),
+          save: getEndpoint({ href: endpoint, method: "PUT" }, req),
+          delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
+          postComment: getEndpoint(
+            {
+              href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
+              method: "POST",
+            },
+            req
+          ),
+          getComments: getEndpoint(
+            {
+              href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
+              method: "GET",
+            },
+            req
+          ),
+          publishComments: getEndpoint(
+            {
+              href: `${baseUrl(originalUrl)}/publishComments`,
+              method: "POST",
+            },
+            req
+          ),
+          deleteComments: getEndpoint(
+            {
+              href: `${baseUrl(originalUrl)}/deleteComments`,
+              method: "POST",
+            },
+            req
+          ),
+        },
+      });
     });
-  });
   },
 
   getLastEntry: async (query, queryArgs) => {
