@@ -1,7 +1,7 @@
 const { db, getId, processEntry, jsonReply } = require("../util");
 
 const syncTags = async (connection, id, tags) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     connection
       .query("DELETE FROM entries_tags WHERE entry_id = ?", [id])
       .then(async () => {
@@ -27,16 +27,6 @@ const syncTags = async (connection, id, tags) => {
         }
       });
   });
-};
-
-const getTags = async (connection, id) => {
-  return new Promise((resolve, reject) => {
-    connection
-      .query("SELECT * FROM entries_tags WHERE entry_id = ?", [id])
-      .then((tags) => {
-        resolve(tags);
-      });
-  }).catch((e) => reject(e));
 };
 
 module.exports = async function (context, req) {
@@ -100,29 +90,20 @@ module.exports = async function (context, req) {
       values.push(context.bindingData.id);
     }
     await connection.query(query, values).then(async (qRes) => {
-      const sendResponse = (entry, tags) => {
-        context.res = {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(
-            processEntry(
-              req,
-              { id: req.method === "PUT" ? body.newId : body.id, ...entry },
-              tags ? tags : []
-            )
-          ),
-        };
+      const sendResponse = async (entry) => {
+        await processEntry(req, {
+          id: req.method === "PUT" ? body.newId : body.id,
+          ...entry,
+        }).then((processedEntry) => {
+          jsonReply(context, processedEntry);
+        });
       };
       if (req.method !== "GET") {
-        await syncTags(connection, body.id, body.tags).then(() => {
-          sendResponse();
+        await syncTags(connection, body.id, body.tags).then(async () => {
+          await sendResponse();
         });
       } else {
-        await getTags(connection, body.id).then((tags) => {
-          sendResponse(qRes[0], tags);
-        });
+        await sendResponse(qRes[0]);
       }
     });
   });
