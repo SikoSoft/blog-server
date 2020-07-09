@@ -3,7 +3,7 @@ const {
   getSettings,
   processEntry,
   getLastEntry,
-  getEntriesTags,
+  jsonReply,
 } = require("../util");
 
 module.exports = async function (context, req) {
@@ -27,28 +27,15 @@ module.exports = async function (context, req) {
               await processedEntries.forEach(async (entry) => {
                 await entry.then((data) => entries.push(data));
               });
-
-              context.res = {
-                status: 200,
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  [req.drafts ? "drafts" : "entries"]: entries,
-                  end: rawEntries[rawEntries.length - 1].id === lastEntryId,
-                }),
-              };
+              jsonReply(context, {
+                [req.drafts ? "drafts" : "entries"]: entries,
+                end: rawEntries[rawEntries.length - 1].id === lastEntryId,
+              });
             } else {
-              context.res = {
-                status: 200,
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  [req.drafts ? "drafts" : "entries"]: [],
-                  end: true,
-                }),
-              };
+              jsonReply(context, {
+                [req.drafts ? "drafts" : "entries"]: [],
+                end: true,
+              });
             }
           });
       });
