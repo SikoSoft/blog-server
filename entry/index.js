@@ -1,4 +1,4 @@
-const { db, getId, processEntry, jsonReply } = require("../util");
+const { db, getId, processEntry, jsonReply, flushState } = require("../util");
 
 const syncTags = async (connection, id, tags) => {
   return new Promise((resolve) => {
@@ -19,10 +19,12 @@ const syncTags = async (connection, id, tags) => {
                   .reduce((acc, arr) => [...acc, ...arr], [])
               )
               .then(() => {
+                flushState("entriesTags");
                 resolve();
               });
           });
         } else {
+          flushState("entriesTags");
           resolve();
         }
       });
