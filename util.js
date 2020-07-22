@@ -151,6 +151,24 @@ async function getEntriesTags() {
   });
 }
 
+async function getFurtherReading(entryId) {
+  const settings = await getSettings();
+  if (settings.further_reading_min_tags === 0) {
+    return [];
+  }
+  const furtherReading = [];
+  const entriesTags = await getEntriesTags();
+  Object.keys(entriesTags).forEach((id) => {
+    const matches = entriesTags[id].filter(
+      (tag) => entriesTags[entryId].indexOf(tag) !== -1
+    );
+    if (id !== entryId && matches.length >= settings.further_reading_min_tags) {
+      furtherReading.push(id);
+    }
+  });
+  return furtherReading;
+}
+
 module.exports = {
   db,
 
@@ -252,43 +270,46 @@ module.exports = {
       );
       const tags = await getEntriesTags();
       const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
-      resolve({
-        ...entry,
-        furtherReading: [],
-        tags: tags[entry.id] ? tags[entry.id] : [],
-        api: {
-          view: getEndpoint({ href: endpoint, method: "GET" }, req),
-          save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-          delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
-          postComment: getEndpoint(
-            {
-              href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
-              method: "POST",
-            },
-            req
-          ),
-          getComments: getEndpoint(
-            {
-              href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
-              method: "GET",
-            },
-            req
-          ),
-          publishComments: getEndpoint(
-            {
-              href: `${baseUrl(originalUrl)}/publishComments`,
-              method: "POST",
-            },
-            req
-          ),
-          deleteComments: getEndpoint(
-            {
-              href: `${baseUrl(originalUrl)}/deleteComments`,
-              method: "POST",
-            },
-            req
-          ),
-        },
+      getSettings().then(async () => {
+        const furtherReading = await getFurtherReading(entry.id);
+        resolve({
+          ...entry,
+          furtherReading,
+          tags: tags[entry.id] ? tags[entry.id] : [],
+          api: {
+            view: getEndpoint({ href: endpoint, method: "GET" }, req),
+            save: getEndpoint({ href: endpoint, method: "PUT" }, req),
+            delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
+            postComment: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
+                method: "POST",
+              },
+              req
+            ),
+            getComments: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
+                method: "GET",
+              },
+              req
+            ),
+            publishComments: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/publishComments`,
+                method: "POST",
+              },
+              req
+            ),
+            deleteComments: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/deleteComments`,
+                method: "POST",
+              },
+              req
+            ),
+          },
+        });
       });
     });
   },
