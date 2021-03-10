@@ -160,7 +160,10 @@ async function getFurtherReading(entryId) {
   const entriesTags = await getEntriesTags();
   Object.keys(entriesTags).forEach((id) => {
     const matches = entriesTags[id].filter(
-      (tag) => entriesTags[entryId].indexOf(tag) !== -1
+      (tag) =>
+        typeof entriesTags[entryId] !== 'undefined'
+        ? entriesTags[entryId].indexOf(tag) !== -1
+        : false
     );
     if (id !== entryId && matches.length >= settings.further_reading_min_tags) {
       furtherReading.push(id);
