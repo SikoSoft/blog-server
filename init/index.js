@@ -35,6 +35,7 @@ module.exports = async function (context, req) {
     ["addFilterRule", "filterRule/{filterId}", "POST"],
     ["deleteFilterRule", "filterRule/{filterId}", "DELETE"],
     ["saveFilterRule", "filterRule/{filterId}", "PUT"],
+    ["getRoleRights", "roleRights", "GET"]
   ].forEach((endpoint) => {
     api[endpoint[0]] = getEndpoint(
       {
