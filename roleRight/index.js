@@ -5,7 +5,7 @@ module.exports = async function (context, req) {
         if (req.method === "POST") {
           await connection
             .query(
-              "INSERT INTO filters_rules (role, action) VALUES(?, ?)",
+              "INSERT INTO roles_rights (role, action) VALUES(?, ?)",
               [context.bindingData.role, context.bindingData.action]
             )
             .then(async (res) => {
