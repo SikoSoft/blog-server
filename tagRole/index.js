@@ -8,8 +8,8 @@ module.exports = async function (context, req) {
               "INSERT INTO tags_rights (tag, role) VALUES(?, ?)",
               [context.bindingData.tag, context.bindingData.role]
             )
-            .then(async (res) => {
-              jsonReply(context, { id: res.insertId, success: true });
+            .then(async () => {
+              jsonReply(context, { success: true });
             });
         } else if (req.method === "DELETE") {
           await connection

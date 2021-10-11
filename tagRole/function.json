@@ -5,7 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["post", "delete"]
+      "methods": ["post", "delete"],
+      "route": "tagRole/{tag}/{role}"
     },
     {
       "type": "http",
