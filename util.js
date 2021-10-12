@@ -323,7 +323,7 @@ module.exports = {
         connection
           .query(`${query} ORDER BY created ASC LIMIT 1`, queryArgs)
           .then((lastEntry) => {
-            resolve(lastEntry[0].id);
+            resolve(lastEntry.length ? lastEntry[0].id : -1);
           });
       });
     });
