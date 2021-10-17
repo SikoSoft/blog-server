@@ -1,15 +1,25 @@
 const {
   db,
   getSettings,
+  getTagRights,
   processEntry,
   getLastEntry,
   jsonReply,
+  getExcludedEntries,
 } = require("../util");
 
 module.exports = async function (context, req) {
   await getSettings().then(async (settings) => {
     await db.getConnection().then(async (connection) => {
-      const query = `SELECT * FROM entries WHERE public = ?`;
+      const excludedEntries = await getExcludedEntries(
+        req.headers["sess-token"]
+      );
+      const query = `SELECT * FROM entries WHERE public = ? ${
+        (excludedEntries.length ? " AND " : "") +
+        excludedEntries
+          .map((excludedId) => `id != '${excludedId}'`)
+          .join(" AND ")
+      }`;
       const queryArgs = [req.drafts ? 0 : 1];
       await getLastEntry(query, queryArgs).then(async (lastEntryId) => {
         const limit = `LIMIT ${

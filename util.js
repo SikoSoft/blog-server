@@ -56,6 +56,28 @@ async function getSettings() {
   });
 }
 
+async function getTagRoles() {
+  if (state.tagRoles) {
+    return Promise.resolve(state.tagRoles);
+  }
+  return new Promise((resolve, reject) => {
+    db.getConnection()
+      .then((connection) => {
+        connection.query("SELECT * FROM tags_rights").then((tagRolesRows) => {
+          state.tagRoles = {};
+          tagRolesRows.forEach((row) => {
+            if (!state.tagRoles[row.tag]) {
+              state.tagRoles[row.tag] = [];
+            }
+            state.tagRoles[row.tag].push(row.role);
+          });
+          resolve(state.tagRoles);
+        });
+      })
+      .catch((error) => reject(error));
+  });
+}
+
 async function getRoleRights() {
   if (state.rights) {
     return Promise.resolve(state.rights);
@@ -72,7 +94,7 @@ async function getRoleRights() {
   });
 }
 
-async function getSessionRole(sessToken) {
+async function getSessionRole(sessToken = "") {
   if (state.session[sessToken] && state.session[sessToken].role) {
     return Promise.resolve(state.session[sessToken].role);
   }
@@ -80,6 +102,7 @@ async function getSessionRole(sessToken) {
     getSettings().then((settings) => {
       if (!sessToken) {
         resolve(settings.role_guest);
+        return;
       }
       let role = settings.role_guest;
       db.getConnection()
@@ -159,9 +182,8 @@ async function getFurtherReading(entryId) {
   const furtherReading = [];
   const entriesTags = await getEntriesTags();
   Object.keys(entriesTags).forEach((id) => {
-    const matches = entriesTags[id].filter(
-      (tag) =>
-        typeof entriesTags[entryId] !== 'undefined'
+    const matches = entriesTags[id].filter((tag) =>
+      typeof entriesTags[entryId] !== "undefined"
         ? entriesTags[entryId].indexOf(tag) !== -1
         : false
     );
@@ -182,6 +204,8 @@ module.exports = {
   getEndpoint,
 
   getSettings,
+
+  getTagRoles,
 
   getRoleRights,
 
@@ -325,6 +349,44 @@ module.exports = {
           .then((lastEntry) => {
             resolve(lastEntry.length ? lastEntry[0].id : -1);
           });
+      });
+    });
+  },
+
+  getExcludedEntries: async (sessToken) => {
+    return new Promise((resolve) => {
+      db.getConnection().then(async (connection) => {
+        connection.query("SELECT id FROM entries").then((idRows) => {
+          Promise.all([
+            getSessionRole(sessToken),
+            getTagRoles(),
+            getEntriesTags(),
+          ])
+            .then(([role, tagRoles, entriesTags]) => {
+              const allIds = idRows.map((idRow) => idRow.id);
+              const excludedEntries = allIds.filter((id) => {
+                if (entriesTags[id]) {
+                  let allowedForAllTags = true;
+                  entriesTags[id].forEach((entryTag) => {
+                    if (
+                      tagRoles[entryTag] &&
+                      tagRoles[entryTag].indexOf(role) === -1
+                    ) {
+                      allowedForAllTags = false;
+                    }
+                  });
+                  if (!allowedForAllTags) {
+                    return true;
+                  }
+                }
+                return false;
+              });
+              resolve(excludedEntries);
+            })
+            .catch((error) => {
+              console.log("error", error);
+            });
+        });
       });
     });
   },
