@@ -1,4 +1,4 @@
-const { db, jsonReply } = require("../util");
+const { db, jsonReply, flushState } = require("../util");
 
 module.exports = async function (context, req) {
     await db.getConnection().then(async (connection) => {
@@ -9,12 +9,14 @@ module.exports = async function (context, req) {
               [context.bindingData.tag, context.bindingData.role]
             )
             .then(async () => {
+              flushState("tagRoles");
               jsonReply(context, { success: true });
             });
         } else if (req.method === "DELETE") {
           await connection
             .query("DELETE FROM tags_rights WHERE tag = ? AND role = ?", [context.bindingData.tag, context.bindingData.role])
             .then(async () => {
+              flushState("tagRoles");
               jsonReply(context, { success: true });
             });
         }
