@@ -2,7 +2,7 @@ const { db, getSessionRights } = require("../util");
 
 module.exports = async function(context, req) {
   await getSessionRights(req.headers["sess-token"]).then(async rights => {
-    const canViewUnpublished = rights.includes("view_unpublished_comments");
+    const canViewUnpublished = rights.includes("view_unpublished_comment");
     await db.getConnection().then(async connection => {
       await connection
         .query("SELECT * FROM comments WHERE entry_id = ? ORDER BY time DESC", [

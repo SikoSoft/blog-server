@@ -56,6 +56,28 @@ async function getSettings() {
   });
 }
 
+async function getTagRoles() {
+  if (state.tagRoles) {
+    return Promise.resolve(state.tagRoles);
+  }
+  return new Promise((resolve, reject) => {
+    db.getConnection()
+      .then((connection) => {
+        connection.query("SELECT * FROM tags_rights").then((tagRolesRows) => {
+          state.tagRoles = {};
+          tagRolesRows.forEach((row) => {
+            if (!state.tagRoles[row.tag]) {
+              state.tagRoles[row.tag] = [];
+            }
+            state.tagRoles[row.tag].push(row.role);
+          });
+          resolve(state.tagRoles);
+        });
+      })
+      .catch((error) => reject(error));
+  });
+}
+
 async function getRoleRights() {
   if (state.rights) {
     return Promise.resolve(state.rights);
@@ -72,7 +94,7 @@ async function getRoleRights() {
   });
 }
 
-async function getSessionRole(sessToken) {
+async function getSessionRole(sessToken = "") {
   if (state.session[sessToken] && state.session[sessToken].role) {
     return Promise.resolve(state.session[sessToken].role);
   }
@@ -80,6 +102,7 @@ async function getSessionRole(sessToken) {
     getSettings().then((settings) => {
       if (!sessToken) {
         resolve(settings.role_guest);
+        return;
       }
       let role = settings.role_guest;
       db.getConnection()
@@ -125,6 +148,52 @@ async function getSessionRights(sessToken) {
   });
 }
 
+async function getEntriesTags() {
+  if (state.entriesTags) {
+    return Promise.resolve(state.entriesTags);
+  }
+  return new Promise((resolve) => {
+    db.getConnection().then((connection) => {
+      connection
+        .query("SELECT * FROM entries_tags ORDER BY entry_id, tag")
+        .then((tagRows) => {
+          const entriesTags = {};
+          tagRows.forEach((tagRow) => {
+            entriesTags[tagRow.entry_id] = [
+              ...(entriesTags[tagRow.entry_id]
+                ? entriesTags[tagRow.entry_id]
+                : []),
+              tagRow.tag,
+            ];
+          });
+          console.log("entriesTags", entriesTags);
+          state.entriesTags = entriesTags;
+          resolve(entriesTags);
+        });
+    });
+  });
+}
+
+async function getFurtherReading(entryId) {
+  const settings = await getSettings();
+  if (settings.further_reading_min_tags === 0) {
+    return [];
+  }
+  const furtherReading = [];
+  const entriesTags = await getEntriesTags();
+  Object.keys(entriesTags).forEach((id) => {
+    const matches = entriesTags[id].filter((tag) =>
+      typeof entriesTags[entryId] !== "undefined"
+        ? entriesTags[entryId].indexOf(tag) !== -1
+        : false
+    );
+    if (id !== entryId && matches.length >= settings.further_reading_min_tags) {
+      furtherReading.push(id);
+    }
+  });
+  return furtherReading;
+}
+
 module.exports = {
   db,
 
@@ -136,11 +205,15 @@ module.exports = {
 
   getSettings,
 
+  getTagRoles,
+
   getRoleRights,
 
   getSessionRole,
 
   getSessionRights,
+
+  getEntriesTags,
 
   jsonReply: (context, object) => {
     context.res = {
@@ -216,51 +289,56 @@ module.exports = {
     }
   },
 
-  processEntry: (req, entry, tags) => {
-    const originalUrl = req.originalUrl.replace(
-      /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
-      ""
-    );
-    const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
-    return {
-      ...entry,
-      tags: tags
-        .filter((tagRow) => tagRow.entry_id === entry.id)
-        .map((tagRow) => tagRow.tag),
-      api: {
-        view: getEndpoint({ href: endpoint, method: "GET" }, req),
-        save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-        delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
-        postComment: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
-            method: "POST",
+  processEntry: async (req, entry) => {
+    return new Promise(async (resolve) => {
+      const originalUrl = req.originalUrl.replace(
+        /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
+        ""
+      );
+      const tags = await getEntriesTags();
+      const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
+      getSettings().then(async () => {
+        const furtherReading = await getFurtherReading(entry.id);
+        resolve({
+          ...entry,
+          furtherReading,
+          tags: tags[entry.id] ? tags[entry.id] : [],
+          api: {
+            view: getEndpoint({ href: endpoint, method: "GET" }, req),
+            save: getEndpoint({ href: endpoint, method: "PUT" }, req),
+            delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
+            postComment: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
+                method: "POST",
+              },
+              req
+            ),
+            getComments: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
+                method: "GET",
+              },
+              req
+            ),
+            publishComments: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/publishComments`,
+                method: "POST",
+              },
+              req
+            ),
+            deleteComments: getEndpoint(
+              {
+                href: `${baseUrl(originalUrl)}/deleteComments`,
+                method: "POST",
+              },
+              req
+            ),
           },
-          req
-        ),
-        getComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
-            method: "GET",
-          },
-          req
-        ),
-        publishComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/publishComments`,
-            method: "POST",
-          },
-          req
-        ),
-        deleteComments: getEndpoint(
-          {
-            href: `${baseUrl(originalUrl)}/deleteComments`,
-            method: "POST",
-          },
-          req
-        ),
-      },
-    };
+        });
+      });
+    });
   },
 
   getLastEntry: async (query, queryArgs) => {
@@ -269,8 +347,46 @@ module.exports = {
         connection
           .query(`${query} ORDER BY created ASC LIMIT 1`, queryArgs)
           .then((lastEntry) => {
-            resolve(lastEntry[0].id);
+            resolve(lastEntry.length ? lastEntry[0].id : -1);
           });
+      });
+    });
+  },
+
+  getExcludedEntries: async (sessToken) => {
+    return new Promise((resolve) => {
+      db.getConnection().then(async (connection) => {
+        connection.query("SELECT id FROM entries").then((idRows) => {
+          Promise.all([
+            getSessionRole(sessToken),
+            getTagRoles(),
+            getEntriesTags(),
+          ])
+            .then(([role, tagRoles, entriesTags]) => {
+              const allIds = idRows.map((idRow) => idRow.id);
+              const excludedEntries = allIds.filter((id) => {
+                if (entriesTags[id]) {
+                  let allowedForAllTags = true;
+                  entriesTags[id].forEach((entryTag) => {
+                    if (
+                      tagRoles[entryTag] &&
+                      tagRoles[entryTag].indexOf(role) === -1
+                    ) {
+                      allowedForAllTags = false;
+                    }
+                  });
+                  if (!allowedForAllTags) {
+                    return true;
+                  }
+                }
+                return false;
+              });
+              resolve(excludedEntries);
+            })
+            .catch((error) => {
+              console.log("error", error);
+            });
+        });
       });
     });
   },

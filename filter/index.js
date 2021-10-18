@@ -105,28 +105,23 @@ module.exports = async function (context, req) {
                     `${query} ORDER BY created DESC ${limit}`,
                     filteredByTags
                   )
-                  .then(async (entries) => {
-                    let tagQuery = `SELECT * FROM entries_tags WHERE ${[
-                      ...entries,
-                    ]
-                      .fill("entry_id = ?")
-                      .join(" || ")}`;
-                    await connection
-                      .query(
-                        tagQuery,
-                        entries.map((entry) => entry.id)
-                      )
-                      .then((tags) => {
-                        jsonReply(context, {
-                          entries: entries.map((entry) =>
-                            processEntry(req, entry, tags)
-                          ),
-                          end:
-                            entries.length === 0
-                              ? true
-                              : entries[entries.length - 1].id === lastEntryId,
-                        });
-                      });
+                  .then(async (rawEntries) => {
+                    const processedEntries = rawEntries.map((entry) =>
+                      processEntry(req, entry)
+                    );
+                    await Promise.all(processedEntries);
+                    const entries = [];
+                    await processedEntries.forEach(async (entry) => {
+                      await entry.then((data) => entries.push(data));
+                    });
+
+                    jsonReply(context, {
+                      entries,
+                      end:
+                        entries.length === 0
+                          ? true
+                          : entries[entries.length - 1].id === lastEntryId,
+                    });
                   });
               }
             );

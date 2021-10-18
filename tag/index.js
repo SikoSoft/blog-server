@@ -40,11 +40,17 @@ module.exports = async function (context, req) {
                       `${query} ORDER BY created DESC ${limit}`,
                       entriesWithTag
                     )
-                    .then((entries) => {
+                    .then(async (rawEntries) => {
+                      const processedEntries = rawEntries.map((entry) =>
+                        processEntry(req, entry)
+                      );
+                      await Promise.all(processedEntries);
+                      const entries = [];
+                      await processedEntries.forEach(async (entry) => {
+                        await entry.then((data) => entries.push(data));
+                      });
                       jsonReply(context, {
-                        entries: entries.map((entry) =>
-                          processEntry(req, entry, entriesTags)
-                        ),
+                        entries,
                         end:
                           entries.length === 0
                             ? true
