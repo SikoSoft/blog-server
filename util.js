@@ -5,6 +5,7 @@ const db = require("./database");
 
 const initialState = {
   session: {},
+  excludedEntries: {},
 };
 
 let state = { ...initialState };
@@ -354,6 +355,9 @@ module.exports = {
   },
 
   getExcludedEntries: async (sessToken) => {
+    if (state.excludedEntries[sessToken]) {
+      return Promise.resolve(state.excludedEntries[sessToken]);
+    }
     return new Promise((resolve) => {
       db.getConnection().then(async (connection) => {
         connection.query("SELECT id FROM entries").then((idRows) => {
@@ -381,6 +385,7 @@ module.exports = {
                 }
                 return false;
               });
+              state.excludedEntries[sessToken] = excludedEntries;
               resolve(excludedEntries);
             })
             .catch((error) => {
