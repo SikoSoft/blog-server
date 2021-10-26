@@ -40,7 +40,10 @@ module.exports = async function (context, req) {
     ["deleteRoleRight", "roleRight/{role}/{action}", "DELETE"],
     ["addTagRole", "tagRole/{tag}/{role}", "POST"],
     ["deleteTagRole", "tagRole/{tag}/{role}", "DELETE"],
-    ["getTagRoles", "tagRoles", "GET"]
+    ["getTagRoles", "tagRoles", "GET"],
+    ["addRole", "role", "POST"],
+    ["updateRole", "role", "PUT"],
+    ["deleteRole", "role", "DELETE"]
   ].forEach((endpoint) => {
     api[endpoint[0]] = getEndpoint(
       {
