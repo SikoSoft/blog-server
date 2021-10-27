@@ -5,11 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": [
-        "put",
-        "post",
-        "delete"
-      ]
+      "methods": ["put", "post", "delete"],
+      "route": "role/{id?}"
     },
     {
       "type": "http",
