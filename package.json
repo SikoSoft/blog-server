@@ -3,7 +3,7 @@
   "version": "0.9.0",
   "description": "Backend function app for my blog",
   "scripts": {
-    "test": "echo \"No tests yet...\""
+    "setup": "node setup.js"
   },
   "author": "",
   "dependencies": {
@@ -15,5 +15,8 @@
     "parse-multipart": "^1.0.4",
     "query-string": "^6.10.1",
     "uuid": "^3.4.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2"
   }
 }
