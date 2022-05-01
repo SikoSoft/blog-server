@@ -1,8 +1,7 @@
 const { db } = require("./util.js");
 const fs = require("fs");
 const path = require("path");
-const { rights, settings, typeMap } = require("blog-spec");
-const { exit } = require("process");
+const { rights, roles, settings, typeMap } = require("blog-spec");
 
 let dbCon;
 let errors = [];
@@ -16,6 +15,16 @@ const setupRights = async () => {
         errors.push(error);
       });
     }
+  }
+};
+
+const setupRoles = async () => {
+  dbCon = await db.getConnection();
+  const query = "INSERT INTO roles (id, name) VALUES(?, ?)";
+  for (role of roles) {
+    dbCon.query(query, [role.id, role.name]).catch((error) => {
+      errors.push(error);
+    });
   }
 };
 
@@ -61,9 +70,9 @@ const setupTables = async () => {
 
 const setup = async () => {
   await setupTables();
+  await setupRoles();
   await setupRights();
   await setupSettings();
-  return;
 };
 
 setup();
