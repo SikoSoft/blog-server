@@ -9,9 +9,9 @@ let errors = [];
 const setupRights = async () => {
   dbCon = await db.getConnection();
   const query = "INSERT INTO roles_rights (role, action) VALUES(?, ?)";
-  for (action of Object.keys(rights)) {
-    for (role of rights[action].defaultRoles) {
-      dbCon.query(query, [role, action]).catch((error) => {
+  for (right of rights) {
+    for (role of right.defaultRoles) {
+      dbCon.query(query, [role, right.id]).catch((error) => {
         errors.push(error);
       });
     }
@@ -32,18 +32,16 @@ const setupSettings = async () => {
   dbCon = await db.getConnection();
   const query =
     "INSERT INTO settings (`id`, `int`, `float`, `varchar`) VALUES(?, ?, ?, ?)";
-  for (id of Object.keys(settings)) {
-    const type = settings[id].dataType
-      ? settings[id].dataType
-      : typeMap[settings[id].type];
-    const value = settings[id].default
-      ? settings[id].default
+  for (setting of settings) {
+    const type = setting.dataType ? setting.dataType : typeMap[setting.type];
+    const value = setting.default
+      ? setting.default
       : type === "varchar"
       ? ""
       : 0;
     await dbCon
       .query(query, [
-        id,
+        setting.id,
         type === "int" ? value : 0,
         type === "float" ? value : 0,
         type === "varchar" ? value : "",

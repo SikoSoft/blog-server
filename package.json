@@ -8,7 +8,7 @@
   "author": "",
   "dependencies": {
     "azure-storage": "^2.10.3",
-    "blog-spec": "github:SikoSoft/blog-spec#1.0.2",
+    "blog-spec": "github:SikoSoft/blog-spec#2.0.0",
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "into-stream": "^5.1.1",
