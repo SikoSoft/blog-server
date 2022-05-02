@@ -7,7 +7,9 @@ const {
   jsonReply,
   getTextFromDelta,
 } = require("../util");
-const { ERROR_CAPTCHA_FAILED } = require("../errorCodes");
+const {
+  errorCodes: { ERROR_CAPTCHA_FAILED },
+} = require("blog-spec");
 
 const getSentimentScore = async (text) => {
   if (
