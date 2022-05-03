@@ -9,7 +9,7 @@ const initialState = {
   excludedEntries: {},
 };
 
-let state = { ...initialState };
+let state = { ...JSON.parse(JSON.stringify(initialState)) };
 
 function pad(x, padding = 2) {
   return x.toString().padStart(padding, "0");
@@ -300,7 +300,7 @@ module.exports = {
     if (key) {
       delete state[key];
     } else {
-      state = { ...initialState };
+      state = { ...JSON.parse(JSON.stringify(initialState)) };
     }
   },
 
@@ -368,8 +368,8 @@ module.exports = {
     });
   },
 
-  getExcludedEntries: async (sessToken) => {
-    if (state.excludedEntries[sessToken]) {
+  getExcludedEntries: async (sessToken = "") => {
+    if (state.excludedEntries && state.excludedEntries[sessToken]) {
       return Promise.resolve(state.excludedEntries[sessToken]);
     }
     return new Promise((resolve) => {
