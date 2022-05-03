@@ -167,25 +167,20 @@ async function getEntriesTags() {
   if (state.entriesTags) {
     return Promise.resolve(state.entriesTags);
   }
-  return new Promise((resolve) => {
-    db.getConnection().then((connection) => {
-      connection
-        .query("SELECT * FROM entries_tags ORDER BY entry_id, tag")
-        .then((tagRows) => {
-          const entriesTags = {};
-          tagRows.forEach((tagRow) => {
-            entriesTags[tagRow.entry_id] = [
-              ...(entriesTags[tagRow.entry_id]
-                ? entriesTags[tagRow.entry_id]
-                : []),
-              tagRow.tag,
-            ];
-          });
-          console.log("entriesTags", entriesTags);
-          state.entriesTags = entriesTags;
-          resolve(entriesTags);
-        });
+  return new Promise(async (resolve) => {
+    const connection = await db.getConnection();
+    const tagRows = await connection.query(
+      "SELECT * FROM entries_tags ORDER BY entry_id, tag"
+    );
+    const entriesTags = {};
+    tagRows.forEach((tagRow) => {
+      entriesTags[tagRow.entry_id] = [
+        ...(entriesTags[tagRow.entry_id] ? entriesTags[tagRow.entry_id] : []),
+        tagRow.tag,
+      ];
     });
+    state.entriesTags = entriesTags;
+    resolve(entriesTags);
   });
 }
 
