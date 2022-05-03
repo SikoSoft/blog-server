@@ -76,10 +76,6 @@ CREATE TABLE `filters_rules` (
 CREATE TABLE `roles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(32) NOT NULL,
-  `c` tinyint(1) DEFAULT 0,
-  `r` tinyint(1) DEFAULT 0,
-  `u` tinyint(1) DEFAULT 0,
-  `d` tinyint(1) DEFAULT 0,
   `token` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
