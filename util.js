@@ -2,6 +2,7 @@ const URL = require("url").URL;
 const fetch = require("node-fetch");
 const queryString = require("query-string");
 const db = require("./database");
+const spec = require("blog-spec");
 
 const initialState = {
   session: {},
@@ -48,7 +49,20 @@ async function getSettings() {
   return new Promise((resolve, reject) => {
     db.getConnection()
       .then((connection) => {
-        connection.query("SELECT * FROM settings").then(([settings]) => {
+        connection.query("SELECT * FROM settings").then((settingsRows) => {
+          const settings = {};
+          for (setting of spec.settings) {
+            const matchedRow = settingsRows.filter(
+              (settingRow) => settingRow.id === setting.id
+            );
+            settings[setting.id] = matchedRow.length
+              ? matchedRow[0][
+                  spec.typeMap[
+                    setting.dataType ? setting.dataType : setting.type
+                  ]
+                ]
+              : setting.default;
+          }
           state.settings = settings;
           resolve(settings);
         });
