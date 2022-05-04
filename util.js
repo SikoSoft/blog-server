@@ -311,7 +311,7 @@ module.exports = {
           ...entry,
           furtherReading,
           tags: tags[entry.id] ? tags[entry.id] : [],
-          api: {
+          links: {
             view: getEndpoint({ href: endpoint, method: "GET" }, req),
             save: getEndpoint({ href: endpoint, method: "PUT" }, req),
             delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),

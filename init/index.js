@@ -10,7 +10,7 @@ const {
 
 module.exports = async function (context, req) {
   const apiHost = baseUrl(req);
-  const api = {};
+  const links = {};
   [
     ["getEntry", "entry/{id}", "GET"],
     ["getDraft", "entry/{id}", "GET"],
@@ -45,7 +45,7 @@ module.exports = async function (context, req) {
     ["updateRole", "role/{role}", "PUT"],
     ["deleteRole", "role/{role}", "DELETE"],
   ].forEach((endpoint) => {
-    api[endpoint[0]] = getEndpoint(
+    links[endpoint[0]] = getEndpoint(
       {
         href: `${apiHost}/${endpoint[1]}`,
         method: endpoint[2],
@@ -53,7 +53,6 @@ module.exports = async function (context, req) {
       req
     );
   });
-  context.log("process.env", process.env);
   const settings = await getSettings();
   const rights = await getSessionRights(req.headers["sess-token"]);
   const sessionRole = await getSessionRole(req.headers["sess-token"]);
@@ -71,6 +70,6 @@ module.exports = async function (context, req) {
     user,
     roles,
     settings,
-    api,
+    links,
   });
 };

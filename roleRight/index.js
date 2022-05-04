@@ -12,7 +12,7 @@ module.exports = async function (context, req) {
     const right = {
       role: context.bindingData.role,
       action: context.bindingData.action,
-      api: {
+      links: {
         delete: getEndpoint(
           {
             href: `${apiHost}/roleRight/${context.bindingData.role}/${context.bindingData.action}`,

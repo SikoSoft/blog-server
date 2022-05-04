@@ -10,7 +10,7 @@ module.exports = async function (context, req) {
     context,
     rights.map((right) => ({
       ...right,
-      api: {
+      links: {
         delete: getEndpoint(
           {
             href: `${apiHost}/roleRight/${right.role}/${right.action}`,
