@@ -111,16 +111,16 @@ CREATE TABLE `tags_rights` (
 
 
 CREATE TABLE `tokens` (
-  `token` varchar(64) CHARACTER SET utf8mb3 NOT NULL,
+  `code` varchar(64) CHARACTER SET utf8mb3 NOT NULL,
   `one_time` tinyint(1) DEFAULT 0,
   `consumed` int(6) DEFAULT 0,
   `role` int(3) DEFAULT 0,
-  PRIMARY KEY (`token`)
+  PRIMARY KEY (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 
 
 CREATE TABLE `tokens_consumed` (
-  `token` varchar(64) NOT NULL,
+  `code` varchar(64) NOT NULL,
   `ip` varchar(15) NOT NULL,
   `time` int(10) DEFAULT 0,
   `session` varchar(255) NOT NULL
@@ -128,7 +128,7 @@ CREATE TABLE `tokens_consumed` (
 
 
 CREATE TABLE `tokens_invalid_attempts` (
-  `token` varchar(64) NOT NULL,
+  `code` varchar(64) NOT NULL,
   `ip` varchar(15) NOT NULL,
   `time` int(10) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;

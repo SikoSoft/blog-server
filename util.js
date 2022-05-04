@@ -126,7 +126,7 @@ async function getSessionRole(sessToken = "") {
         .then((connection) => {
           connection
             .query(
-              "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.token = c.token",
+              "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.code = c.code",
               [sessToken]
             )
             .then(([session]) => {

@@ -11,7 +11,7 @@ module.exports = async function (context, req) {
   const now = Math.floor(new Date().getTime() / 1000);
   await db.getConnection().then(async (dbCon) => {
     await dbCon
-      .query("SELECT * FROM tokens WHERE token = ?", [body.token])
+      .query("SELECT * FROM tokens WHERE code = ?", [body.code])
       .then(async (qRes) => {
         if (qRes.length) {
           const tokenRow = qRes[0];
@@ -27,16 +27,16 @@ module.exports = async function (context, req) {
             };
           } else {
             await dbCon
-              .query("UPDATE tokens SET consumed = ? WHERE token = ?", [
+              .query("UPDATE tokens SET consumed = ? WHERE code = ?", [
                 tokenRow.consumed + 1,
-                tokenRow.token,
+                tokenRow.code,
               ])
               .then(async () => {
                 const sessToken = v4();
                 await dbCon
                   .query(
-                    "INSERT INTO tokens_consumed (token, ip, time, session) VALUES(?, ?, ?, ?)",
-                    [tokenRow.token, ip, now, sessToken]
+                    "INSERT INTO tokens_consumed (code, ip, time, session) VALUES(?, ?, ?, ?)",
+                    [tokenRow.code, ip, now, sessToken]
                   )
                   .then(async () => {
                     await dbCon
@@ -52,7 +52,7 @@ module.exports = async function (context, req) {
                           body: JSON.stringify({
                             role: tokenRow.role,
                             sessToken,
-                            authToken: roleRes[0].token,
+                            authToken: roleRes[0].code,
                           }),
                         };
                       });
@@ -62,8 +62,8 @@ module.exports = async function (context, req) {
         } else {
           await dbCon
             .query(
-              "INSERT INTO tokens_invalid_attempts (token, ip, time) VALUES(?, ?, ?)",
-              [body.token, ip, now]
+              "INSERT INTO tokens_invalid_attempts (code, ip, time) VALUES(?, ?, ?)",
+              [body.code, ip, now]
             )
             .then(() => {
               context.res = {
