@@ -32,7 +32,8 @@ function baseUrl(req) {
 
 function getEndpoint(endpoint, req) {
   return {
-    ...endpoint,
+    href: `${baseUrl(req)}/${endpoint.href}`,
+    method: endpoint.method,
     key: req.headers.key ? req.headers.key : "",
   };
 }

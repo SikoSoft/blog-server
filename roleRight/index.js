@@ -1,4 +1,4 @@
-const { db, jsonReply, flushState, baseUrl, getEndpoint } = require("../util");
+const { db, jsonReply, flushState, getEndpoint } = require("../util");
 
 module.exports = async function (context, req) {
   const connection = await db.getConnection();
@@ -8,14 +8,13 @@ module.exports = async function (context, req) {
       [context.bindingData.role, context.bindingData.action]
     );
     flushState("rights");
-    const apiHost = baseUrl(req);
     const right = {
       role: context.bindingData.role,
       action: context.bindingData.action,
       links: {
         delete: getEndpoint(
           {
-            href: `${apiHost}/roleRight/${context.bindingData.role}/${context.bindingData.action}`,
+            href: `roleRight/${context.bindingData.role}/${context.bindingData.action}`,
             method: "DELETE",
           },
           req

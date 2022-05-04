@@ -1,6 +1,5 @@
 const {
   db,
-  baseUrl,
   getEndpoint,
   getSettings,
   getSessionRole,
@@ -9,7 +8,6 @@ const {
 } = require("../util");
 
 module.exports = async function (context, req) {
-  const apiHost = baseUrl(req);
   const links = {};
   [
     ["getEntry", "entry/{id}", "GET"],
@@ -44,10 +42,11 @@ module.exports = async function (context, req) {
     ["addRole", "role", "POST"],
     ["updateRole", "role/{role}", "PUT"],
     ["deleteRole", "role/{role}", "DELETE"],
+    ["getTokens", "tokens", "GET"],
   ].forEach((endpoint) => {
     links[endpoint[0]] = getEndpoint(
       {
-        href: `${apiHost}/${endpoint[1]}`,
+        href: `${endpoint[1]}`,
         method: endpoint[2],
       },
       req
