@@ -22,10 +22,12 @@ function shortDate(time = new Date()) {
   )}`;
 }
 
-function baseUrl(urlString) {
-  const url = new URL(urlString);
+function baseUrl(req) {
+  const url = new URL(req.originalUrl);
   const pathDirs = url.pathname.split("/");
-  return `${url.origin}${pathDirs.slice(0, pathDirs.length - 1).join("/")}`;
+  return `${url.origin}${pathDirs
+    .slice(0, pathDirs.length - Object.keys(req.params).length - 1)
+    .join("/")}`;
 }
 
 function getEndpoint(endpoint, req) {
@@ -301,12 +303,8 @@ module.exports = {
 
   processEntry: async (req, entry) => {
     return new Promise(async (resolve) => {
-      const originalUrl = req.originalUrl.replace(
-        /(\/[0-9]+$|entry\/|filter\/|tag\/)/,
-        ""
-      );
       const tags = await getEntriesTags();
-      const endpoint = `${baseUrl(originalUrl)}/entry/${entry.id}`;
+      const endpoint = `${baseUrl(req)}/entry/${entry.id}`;
       getSettings().then(async () => {
         const furtherReading = await getFurtherReading(entry.id);
         resolve({
@@ -319,28 +317,28 @@ module.exports = {
             delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
             postComment: getEndpoint(
               {
-                href: `${baseUrl(originalUrl)}/postComment/${entry.id}`,
+                href: `${baseUrl(req)}/postComment/${entry.id}`,
                 method: "POST",
               },
               req
             ),
             getComments: getEndpoint(
               {
-                href: `${baseUrl(originalUrl)}/comments/${entry.id}`,
+                href: `${baseUrl(req)}/comments/${entry.id}`,
                 method: "GET",
               },
               req
             ),
             publishComments: getEndpoint(
               {
-                href: `${baseUrl(originalUrl)}/publishComments`,
+                href: `${baseUrl(req)}/publishComments`,
                 method: "POST",
               },
               req
             ),
             deleteComments: getEndpoint(
               {
-                href: `${baseUrl(originalUrl)}/deleteComments`,
+                href: `${baseUrl(req)}/deleteComments`,
                 method: "POST",
               },
               req

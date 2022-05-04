@@ -5,10 +5,11 @@ const {
   getSettings,
   getSessionRole,
   getSessionRights,
+  jsonReply,
 } = require("../util");
 
 module.exports = async function (context, req) {
-  const apiHost = baseUrl(req.originalUrl);
+  const apiHost = baseUrl(req);
   const api = {};
   [
     ["getEntry", "entry/{id}", "GET"],
@@ -53,39 +54,24 @@ module.exports = async function (context, req) {
       req
     );
   });
-  await getSettings().then(async (settings) => {
-    await getSessionRights(req.headers["sess-token"]).then(async (rights) => {
-      await getSessionRole(req.headers["sess-token"]).then(
-        async (sessionRole) => {
-          const user = {
-            role: sessionRole ? sessionRole : settings.role_guest,
-            rights,
-          };
-          await db.getConnection().then(async (dbCon) => {
-            await dbCon.query("SELECT * FROM roles").then(async (qRes) => {
-              const roles = qRes.map((row) => ({
-                id: row.id,
-                name: row.name,
-                rights: ["c", "r", "u", "d"].filter(
-                  (right) => row[right] === 1
-                ),
-              }));
-              context.res = {
-                status: 200,
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  user,
-                  roles,
-                  settings,
-                  api,
-                }),
-              };
-            });
-          });
-        }
-      );
-    });
+  context.log("process.env", process.env);
+  const settings = await getSettings();
+  const rights = await getSessionRights(req.headers["sess-token"]);
+  const sessionRole = await getSessionRole(req.headers["sess-token"]);
+  const user = {
+    role: sessionRole ? sessionRole : settings.role_guest,
+    rights,
+  };
+  const connection = await db.getConnection();
+  const qRes = await connection.query("SELECT * FROM roles");
+  const roles = qRes.map((row) => ({
+    id: row.id,
+    name: row.name,
+  }));
+  jsonReply(context, {
+    user,
+    roles,
+    settings,
+    api,
   });
 };
