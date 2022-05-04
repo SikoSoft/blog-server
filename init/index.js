@@ -38,7 +38,6 @@ module.exports = async function (context, req) {
     ["saveFilterRule", "filterRule/{filterId}", "PUT"],
     ["getRoleRights", "roleRights", "GET"],
     ["addRoleRight", "roleRight/{role}/{action}", "POST"],
-    ["deleteRoleRight", "roleRight/{role}/{action}", "DELETE"],
     ["addTagRole", "tagRole/{tag}/{role}", "POST"],
     ["deleteTagRole", "tagRole/{tag}/{role}", "DELETE"],
     ["getTagRoles", "tagRoles", "GET"],
