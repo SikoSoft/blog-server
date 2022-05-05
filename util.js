@@ -305,7 +305,7 @@ module.exports = {
   processEntry: async (req, entry) => {
     return new Promise(async (resolve) => {
       const tags = await getEntriesTags();
-      const endpoint = `${baseUrl(req)}/entry/${entry.id}`;
+      const endpoint = `entry/${entry.id}`;
       getSettings().then(async () => {
         const furtherReading = await getFurtherReading(entry.id);
         resolve({
@@ -318,28 +318,28 @@ module.exports = {
             delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
             postComment: getEndpoint(
               {
-                href: `${baseUrl(req)}/postComment/${entry.id}`,
+                href: `postComment/${entry.id}`,
                 method: "POST",
               },
               req
             ),
             getComments: getEndpoint(
               {
-                href: `${baseUrl(req)}/comments/${entry.id}`,
+                href: `comments/${entry.id}`,
                 method: "GET",
               },
               req
             ),
             publishComments: getEndpoint(
               {
-                href: `${baseUrl(req)}/publishComments`,
+                href: `publishComments`,
                 method: "POST",
               },
               req
             ),
             deleteComments: getEndpoint(
               {
-                href: `${baseUrl(req)}/deleteComments`,
+                href: `deleteComments`,
                 method: "POST",
               },
               req
