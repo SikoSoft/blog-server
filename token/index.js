@@ -26,11 +26,11 @@ module.exports = async function (context, req) {
     });
   } else if (req.method === "PUT") {
     await connection.query(
-      "UPDATE tokens SET one_time = ?, role = ? WHERE code = ?",
-      [body.one_time, body.role, context.bindingData.code]
+      "UPDATE tokens SET code = ?, one_time = ?, role = ? WHERE code = ?",
+      [body.code, body.one_time, body.role, context.bindingData.code]
     );
     jsonReply(context, {
-      token: await getToken(connection, req, context.bindingData.code),
+      token: await getToken(connection, req, body.code),
     });
   } else if (req.method === "DELETE") {
     const result = await connection.query("DELETE FROM tokens WHERE code = ?", [
