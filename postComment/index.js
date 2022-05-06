@@ -49,65 +49,54 @@ const getSentimentScore = async (text) => {
 module.exports = async function (context, req) {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
-  await verifyCaptcha(body.captchaToken, getIp(req)).then(
-    async (captchaResponse) => {
-      if (captchaResponse.success) {
-        body.message = JSON.stringify(body.message);
-        body.entry_id = context.bindingData.id;
-        body.time = Math.ceil(new Date().getTime() / 1000);
-        const fields = ["entry_id", "name", "message", "time"];
-        const values = fields.map((field) => body[field]);
-        await db.getConnection().then(async (connection) => {
-          await getSentimentScore(
-            getTextFromDelta(JSON.parse(body.message))
-          ).then(async (score) => {
-            await getSettings().then(async (settings) => {
-              if (score && settings.min_score_auto_publish) {
-                fields.push("public");
-                values.push(score >= settings.min_score_auto_publish ? 1 : 0);
-              }
-              await connection
-                .query(
-                  `INSERT INTO comments (${fields.join(",")}) VALUES(${[
-                    ...fields,
-                  ]
-                    .fill("?")
-                    .join(",")})`,
-                  values
-                )
-                .then(async (qRes) => {
-                  const comment = {
-                    id: qRes.insertId,
-                    entry_id: body.entry_id,
-                    name: body.name,
-                    message: body.message,
-                    time: body.time,
-                  };
+  const captchaResponse = await verifyCaptcha(body.captchaToken, getIp(req));
 
-                  if (score) {
-                    await connection
-                      .query(
-                        "INSERT INTO comments_scores (comment_id, score) VALUES(?, ?)",
-                        [qRes.insertId, score]
-                      )
-                      .then(async () => {
-                        jsonReply(context, { ...comment, score });
-                      });
-                  } else {
-                    jsonReply(context, comment);
-                  }
-                });
-            });
-          });
-        });
-      } else {
-        context.res = {
-          status: 500,
-          body: JSON.stringify({
-            errorCode: ERROR_CAPTCHA_FAILED,
-          }),
-        };
-      }
+  if (captchaResponse.success) {
+    body.message = JSON.stringify(body.message);
+    body.entry_id = context.bindingData.id;
+    body.time = Math.ceil(new Date().getTime() / 1000);
+    const fields = ["entry_id", "name", "message", "time"];
+    const values = fields.map((field) => body[field]);
+    const connection = await db.getConnection();
+    const score = await getSentimentScore(
+      getTextFromDelta(JSON.parse(body.message))
+    );
+    const settings = await getSettings();
+    if (score && settings.min_score_auto_publish) {
+      fields.push("public");
+      values.push(score >= settings.min_score_auto_publish ? 1 : 0);
     }
-  );
+    const qRes = await connection.query(
+      `INSERT INTO comments (${fields.join(",")}) VALUES(${[...fields]
+        .fill("?")
+        .join(",")})`,
+      values
+    );
+
+    const comment = {
+      id: qRes.insertId,
+      entry_id: body.entry_id,
+      name: body.name,
+      message: body.message,
+      time: body.time,
+    };
+
+    if (score) {
+      await connection.query(
+        "INSERT INTO comments_scores (comment_id, score) VALUES(?, ?)",
+        [qRes.insertId, score]
+      );
+
+      jsonReply(context, { ...comment, score });
+    } else {
+      jsonReply(context, comment);
+    }
+  } else {
+    context.res = {
+      status: 500,
+      body: JSON.stringify({
+        errorCode: ERROR_CAPTCHA_FAILED,
+      }),
+    };
+  }
 };
