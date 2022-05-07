@@ -49,28 +49,26 @@ async function getSettings() {
   if (state.settings) {
     return Promise.resolve(state.settings);
   }
-  return new Promise((resolve, reject) => {
-    db.getConnection()
-      .then((connection) => {
-        connection.query("SELECT * FROM settings").then((settingsRows) => {
-          const settings = {};
-          for (setting of spec.settings) {
-            const matchedRow = settingsRows.filter(
-              (settingRow) => settingRow.id === setting.id
-            );
-            settings[setting.id] = matchedRow.length
-              ? matchedRow[0][
-                  spec.typeMap[
-                    setting.dataType ? setting.dataType : setting.type
-                  ]
-                ]
-              : setting.default;
-          }
-          state.settings = settings;
-          resolve(settings);
-        });
-      })
-      .catch((error) => reject(error));
+  return new Promise(async (resolve, reject) => {
+    try {
+      const connection = await db.getConnection();
+      const settingsRows = await connection.query("SELECT * FROM settings");
+      const settings = {};
+      for (setting of spec.settings) {
+        const matchedRow = settingsRows.filter(
+          (settingRow) => settingRow.id === setting.id
+        );
+        settings[setting.id] = matchedRow.length
+          ? matchedRow[0][
+              spec.typeMap[setting.dataType ? setting.dataType : setting.type]
+            ]
+          : setting.default;
+      }
+      state.settings = settings;
+      resolve(settings);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -78,21 +76,21 @@ async function getTagRoles() {
   if (state.tagRoles) {
     return Promise.resolve(state.tagRoles);
   }
-  return new Promise((resolve, reject) => {
-    db.getConnection()
-      .then((connection) => {
-        connection.query("SELECT * FROM tags_rights").then((tagRolesRows) => {
-          state.tagRoles = {};
-          tagRolesRows.forEach((row) => {
-            if (!state.tagRoles[row.tag]) {
-              state.tagRoles[row.tag] = [];
-            }
-            state.tagRoles[row.tag].push(row.role);
-          });
-          resolve(state.tagRoles);
-        });
-      })
-      .catch((error) => reject(error));
+  return new Promise(async (resolve, reject) => {
+    try {
+      const connection = await db.getConnection();
+      const tagRolesRows = await connection.query("SELECT * FROM tags_rights");
+      state.tagRoles = {};
+      tagRolesRows.forEach((row) => {
+        if (!state.tagRoles[row.tag]) {
+          state.tagRoles[row.tag] = [];
+        }
+        state.tagRoles[row.tag].push(row.role);
+      });
+      resolve(state.tagRoles);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -100,15 +98,15 @@ async function getRoleRights() {
   if (state.rights) {
     return Promise.resolve(state.rights);
   }
-  return new Promise((resolve, reject) => {
-    db.getConnection()
-      .then((connection) => {
-        connection.query("SELECT * FROM roles_rights").then((rights) => {
-          state.rights = rights;
-          resolve(rights);
-        });
-      })
-      .catch((error) => reject(error));
+  return new Promise(async (resolve, reject) => {
+    try {
+      const connection = await db.getConnection();
+      const rights = await connection.query("SELECT * FROM roles_rights");
+      state.rights = rights;
+      resolve(rights);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -116,32 +114,29 @@ async function getSessionRole(sessToken = "") {
   if (state.session[sessToken] && state.session[sessToken].role) {
     return Promise.resolve(state.session[sessToken].role);
   }
-  return new Promise((resolve, reject) => {
-    getSettings().then((settings) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const settings = await getSettings();
       if (!sessToken) {
         resolve(settings.role_guest);
         return;
       }
       let role = settings.role_guest;
-      db.getConnection()
-        .then((connection) => {
-          connection
-            .query(
-              "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.code = c.code",
-              [sessToken]
-            )
-            .then(([session]) => {
-              if (session) {
-                role = session.role;
-              }
-              state.session[sessToken] = state.session[sessToken]
-                ? { ...state.session[sessToken], role }
-                : { role };
-              resolve(role);
-            });
-        })
-        .catch((error) => reject(error));
-    });
+      const connection = await db.getConnection();
+      const [session] = await connection.query(
+        "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.code = c.code",
+        [sessToken]
+      );
+      if (session) {
+        role = session.role;
+      }
+      state.session[sessToken] = state.session[sessToken]
+        ? { ...state.session[sessToken], role }
+        : { role };
+      resolve(role);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -149,20 +144,20 @@ async function getSessionRights(sessToken) {
   if (state.session[sessToken] && state.session[sessToken].rights) {
     return Promise.resolve(state.session[sessToken].rights);
   }
-  return new Promise((resolve, reject) => {
-    getRoleRights()
-      .then((rights) => {
-        getSessionRole(sessToken).then((role) => {
-          const sessionRights = rights
-            .filter((right) => role === right.role)
-            .map((right) => right.action);
-          state.session[sessToken] = state.session[sessToken]
-            ? { ...state.session[sessToken], rights: sessionRights }
-            : { rights: sessionRights };
-          resolve(sessionRights);
-        });
-      })
-      .catch((error) => reject(error));
+  return new Promise(async (resolve, reject) => {
+    try {
+      const rights = await getRoleRights();
+      const role = await getSessionRole(sessToken);
+      const sessionRights = rights
+        .filter((right) => role === right.role)
+        .map((right) => right.action);
+      state.session[sessToken] = state.session[sessToken]
+        ? { ...state.session[sessToken], rights: sessionRights }
+        : { rights: sessionRights };
+      resolve(sessionRights);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -239,20 +234,18 @@ module.exports = {
   },
 
   getId: async (title) => {
-    return new Promise((resolve, reject) => {
-      db.getConnection()
-        .then(async (connection) => {
-          let id = sanitizeTitle(title);
-          connection
-            .query("SELECT COUNT(*) AS total FROM entries WHERE id REGEXP ?", [
-              id,
-            ])
-            .then((qRes) => {
-              resolve(qRes[0].total === 0 ? id : `${id}-${qRes[0].total + 1}`);
-            })
-            .catch((e) => reject(e));
-        })
-        .catch((e) => reject(e));
+    return new Promise(async (resolve, reject) => {
+      try {
+        const connection = await db.getConnection();
+        const id = sanitizeTitle(title);
+        const qRes = await connection.query(
+          "SELECT COUNT(*) AS total FROM entries WHERE id REGEXP ?",
+          [id]
+        );
+        resolve(qRes[0].total === 0 ? id : `${id}-${qRes[0].total + 1}`);
+      } catch (error) {
+        reject(error);
+      }
     });
   },
 
@@ -306,59 +299,56 @@ module.exports = {
     return new Promise(async (resolve) => {
       const tags = await getEntriesTags();
       const endpoint = `entry/${entry.id}`;
-      getSettings().then(async () => {
-        const furtherReading = await getFurtherReading(entry.id);
-        resolve({
-          ...entry,
-          furtherReading,
-          tags: tags[entry.id] ? tags[entry.id] : [],
-          links: {
-            view: getEndpoint({ href: endpoint, method: "GET" }, req),
-            save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-            delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
-            postComment: getEndpoint(
-              {
-                href: `postComment/${entry.id}`,
-                method: "POST",
-              },
-              req
-            ),
-            getComments: getEndpoint(
-              {
-                href: `comments/${entry.id}`,
-                method: "GET",
-              },
-              req
-            ),
-            publishComments: getEndpoint(
-              {
-                href: `publishComments`,
-                method: "POST",
-              },
-              req
-            ),
-            deleteComments: getEndpoint(
-              {
-                href: `deleteComments`,
-                method: "POST",
-              },
-              req
-            ),
-          },
-        });
+      const furtherReading = await getFurtherReading(entry.id);
+      resolve({
+        ...entry,
+        furtherReading,
+        tags: tags[entry.id] ? tags[entry.id] : [],
+        links: {
+          view: getEndpoint({ href: endpoint, method: "GET" }, req),
+          save: getEndpoint({ href: endpoint, method: "PUT" }, req),
+          delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
+          postComment: getEndpoint(
+            {
+              href: `postComment/${entry.id}`,
+              method: "POST",
+            },
+            req
+          ),
+          getComments: getEndpoint(
+            {
+              href: `comments/${entry.id}`,
+              method: "GET",
+            },
+            req
+          ),
+          publishComments: getEndpoint(
+            {
+              href: `publishComments`,
+              method: "POST",
+            },
+            req
+          ),
+          deleteComments: getEndpoint(
+            {
+              href: `deleteComments`,
+              method: "POST",
+            },
+            req
+          ),
+        },
       });
     });
   },
 
   getLastEntry: async (query, queryArgs) => {
-    return new Promise((resolve) => {
-      db.getConnection().then((connection) => {
-        connection
-          .query(`${query} ORDER BY created ASC LIMIT 1`, queryArgs)
-          .then((lastEntry) => {
-            resolve(lastEntry.length ? lastEntry[0].id : -1);
-          });
-      });
+    return new Promise(async (resolve) => {
+      const connection = await db.getConnection();
+      const lastEntry = await connection.query(
+        `${query} ORDER BY created ASC LIMIT 1`,
+        queryArgs
+      );
+      resolve(lastEntry.length ? lastEntry[0].id : -1);
     });
   },
 
@@ -366,41 +356,36 @@ module.exports = {
     if (state.excludedEntries && state.excludedEntries[sessToken]) {
       return Promise.resolve(state.excludedEntries[sessToken]);
     }
-    return new Promise((resolve) => {
-      db.getConnection().then(async (connection) => {
-        connection.query("SELECT id FROM entries").then((idRows) => {
-          Promise.all([
-            getSessionRole(sessToken),
-            getTagRoles(),
-            getEntriesTags(),
-          ])
-            .then(([role, tagRoles, entriesTags]) => {
-              const allIds = idRows.map((idRow) => idRow.id);
-              const excludedEntries = allIds.filter((id) => {
-                if (entriesTags[id]) {
-                  let allowedForAllTags = true;
-                  entriesTags[id].forEach((entryTag) => {
-                    if (
-                      tagRoles[entryTag] &&
-                      tagRoles[entryTag].indexOf(role) === -1
-                    ) {
-                      allowedForAllTags = false;
-                    }
-                  });
-                  if (!allowedForAllTags) {
-                    return true;
-                  }
-                }
-                return false;
-              });
-              state.excludedEntries[sessToken] = excludedEntries;
-              resolve(excludedEntries);
-            })
-            .catch((error) => {
-              console.log("error", error);
+    return new Promise(async (resolve, reject) => {
+      try {
+        const connection = await db.getConnection();
+        const idRows = await connection.query("SELECT id FROM entries");
+        const role = await getSessionRole(sessToken);
+        const tagRoles = await getTagRoles();
+        const entriesTags = await getEntriesTags();
+        const allIds = idRows.map((idRow) => idRow.id);
+        const excludedEntries = allIds.filter((id) => {
+          if (entriesTags[id]) {
+            let allowedForAllTags = true;
+            entriesTags[id].forEach((entryTag) => {
+              if (
+                tagRoles[entryTag] &&
+                tagRoles[entryTag].indexOf(role) === -1
+              ) {
+                allowedForAllTags = false;
+              }
             });
+            if (!allowedForAllTags) {
+              return true;
+            }
+          }
+          return false;
         });
-      });
+        state.excludedEntries[sessToken] = excludedEntries;
+        resolve(excludedEntries);
+      } catch (error) {
+        reject(error);
+      }
     });
   },
 };
