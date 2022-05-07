@@ -8,6 +8,7 @@ const {
 } = require("../util");
 
 module.exports = async function (context, req) {
+  const rights = await getSessionRights(req.headers["sess-token"]);
   const links = {};
   [
     ["getEntry", "entry/{id}", "GET"],
@@ -15,7 +16,7 @@ module.exports = async function (context, req) {
     ["getEntries", "entries", "GET"],
     ["getEntriesByTag", "tag/{tag}", "GET"],
     ["getTags", "tags", "GET"],
-    ["newEntry", "entry", "POST"],
+    rights.includes("create_entry") ? ["newEntry", "entry", "POST"] : [],
     ["uploadImage", "uploadImage/{type}", "POST"],
     ["useToken", "useToken", "POST"],
     ["publishComments", "publishComments", "POST"],
@@ -53,7 +54,7 @@ module.exports = async function (context, req) {
     );
   });
   const settings = await getSettings();
-  const rights = await getSessionRights(req.headers["sess-token"]);
+
   const sessionRole = await getSessionRole(req.headers["sess-token"]);
   const user = {
     role: sessionRole ? sessionRole : settings.role_guest,
