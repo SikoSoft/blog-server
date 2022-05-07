@@ -300,14 +300,19 @@ module.exports = {
       const tags = await getEntriesTags();
       const endpoint = `entry/${entry.id}`;
       const furtherReading = await getFurtherReading(entry.id);
+      const rights = await getSessionRights(req.headers["sess-token"]);
       resolve({
         ...entry,
         furtherReading,
         tags: tags[entry.id] ? tags[entry.id] : [],
         links: {
           view: getEndpoint({ href: endpoint, method: "GET" }, req),
-          save: getEndpoint({ href: endpoint, method: "PUT" }, req),
-          delete: getEndpoint({ href: endpoint, method: "DELETE" }, req),
+          ...(rights.includes("update_entry")
+            ? { save: getEndpoint({ href: endpoint, method: "PUT" }, req) }
+            : {}),
+          ...(rights.includes("delete_entry")
+            ? { delete: getEndpoint({ href: endpoint, method: "DELETE" }, req) }
+            : {}),
           postComment: getEndpoint(
             {
               href: `postComment/${entry.id}`,
