@@ -45,6 +45,8 @@ CREATE TABLE `entries` (
   `created` int(11) DEFAULT 0,
   `last_edited` int(11) DEFAULT 0,
   `public` tinyint(1) DEFAULT 0,
+  `publish_at` int(11) DEFAULT 0,
+  `published_at` int(11) DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 
