@@ -1,7 +1,6 @@
 const {
   db,
   getSettings,
-  getTagRights,
   processEntry,
   getLastEntry,
   jsonReply,
@@ -12,7 +11,7 @@ module.exports = async function (context, req) {
   const settings = await getSettings();
   const connection = await db.getConnection();
   const excludedEntries = await getExcludedEntries(req.headers["sess-token"]);
-  const query = `SELECT * FROM entries WHERE public = ? ${
+  const query = `SELECT * FROM entries WHERE listed = 1 && public = ? ${
     (excludedEntries.length ? " AND " : "") +
     excludedEntries.map((excludedId) => `id != '${excludedId}'`).join(" AND ")
   }`;

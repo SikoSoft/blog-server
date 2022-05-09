@@ -16,7 +16,9 @@ module.exports = async function (context, req) {
 
   const entriesWithTag = tagEntries.map((tagEntry) => tagEntry.entry_id);
 
-  const query = `SELECT * FROM entries WHERE (${[...entriesWithTag]
+  const query = `SELECT * FROM entries WHERE listed = 1 && (${[
+    ...entriesWithTag,
+  ]
     .fill("id = ?")
     .join(" || ")}) && public = 1`;
   const lastEntryId = await getLastEntry(query, entriesWithTag);

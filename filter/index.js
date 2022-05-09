@@ -82,9 +82,11 @@ module.exports = async function (context, req) {
         filteredByTags.push(entryId);
       }
     });
-    const query = `SELECT * FROM entries WHERE ${[...filteredByTags]
+    const query = `SELECT * FROM entries WHERE listed = 1 && (${[
+      ...filteredByTags,
+    ]
       .fill("id = ?")
-      .join(" || ")}`;
+      .join(" || ")})`;
     const lastEntryId = await getLastEntry(query, filteredByTags);
     const limit = `LIMIT ${
       context.bindingData.start ? parseInt(context.bindingData.start) : 0
