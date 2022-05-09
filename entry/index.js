@@ -46,11 +46,13 @@ module.exports = async function (context, req) {
     "title",
     "body",
     "last_edited",
+    "listed",
     "public",
     "publish_at",
     "published_at",
   ];
   body.last_edited = Math.floor(new Date().getTime() / 1000);
+  body.listed = parseInt(body.listed) === 1 ? 1 : 0;
   body.publish_at = body.publishAt ? body.publishAt : 0;
   body.published_at = parseInt(body.public) === 1 ? body.last_edited : 0;
   body.body = JSON.stringify(body.body);

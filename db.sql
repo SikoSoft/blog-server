@@ -44,6 +44,7 @@ CREATE TABLE `entries` (
   `body` longtext CHARACTER SET utf8mb3 DEFAULT NULL,
   `created` int(11) DEFAULT 0,
   `last_edited` int(11) DEFAULT 0,
+  `listed` tinyint(1) DEFAULT 1,
   `public` tinyint(1) DEFAULT 0,
   `publish_at` int(11) DEFAULT 0,
   `published_at` int(11) DEFAULT 0,
