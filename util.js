@@ -329,14 +329,21 @@ module.exports = {
           ),
           publishComments: getEndpoint(
             {
-              href: `publishComments`,
+              href: "publishComments",
               method: "POST",
             },
             req
           ),
           deleteComments: getEndpoint(
             {
-              href: `deleteComments`,
+              href: "deleteComments",
+              method: "POST",
+            },
+            req
+          ),
+          uploadImage: getEndpoint(
+            {
+              href: "uploadImage/{type}",
               method: "POST",
             },
             req
