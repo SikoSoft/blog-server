@@ -27,7 +27,7 @@ module.exports = async function (context, req) {
     ["getEntriesByFilter", "filter/{filter}", "GET"],
     ["getEntriesByTag", "tag/{tag}", "GET"],
     ["findEntry", "find", "GET"],
-    ["newFilter", "filter", "POST"],
+    rights.includes("manage_filters") ? ["newFilter", "filter", "POST"] : [],
     ["updateFilter", "filter/{filter}", "PUT"],
     ["deleteFilter", "filter/{filter}", "DELETE"],
     ["saveFilterOrder", "saveFilterOrder", "PUT"],
