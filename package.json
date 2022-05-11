@@ -10,10 +10,13 @@
   "dependencies": {
     "azure-storage": "^2.10.3",
     "blog-spec": "github:SikoSoft/blog-spec#2.1.2",
+    "bookshelf": "^1.2.0",
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "into-stream": "^5.1.1",
+    "knex": "^2.0.0",
     "mariadb": "^2.1.5",
+    "mysql": "^2.18.1",
     "node-fetch": "^2.6.7",
     "parse-multipart": "^1.0.4",
     "path": "^0.12.7",
