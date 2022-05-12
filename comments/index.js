@@ -1,4 +1,4 @@
-const { db, getSessionRights, jsonReply } = require("../util");
+const { db, getSessionRights, jsonReply, getEndpoint } = require("../util");
 
 module.exports = async function (context, req) {
   const rights = await getSessionRights(req.headers["sess-token"]);
@@ -9,8 +9,28 @@ module.exports = async function (context, req) {
     [context.bindingData.id]
   );
   jsonReply(context, {
-    comments: comments.filter(
-      (comment) => comment.public === 1 || canViewUnpublished
-    ),
+    comments: comments
+      .filter((comment) => comment.public === 1 || canViewUnpublished)
+      .map((comment) => ({
+        ...comment,
+        links: {
+          ...(rights.includes("delete_comment")
+            ? {
+                delete: getEndpoint(
+                  { href: "deleteComments", method: "POST" },
+                  req
+                ),
+              }
+            : {}),
+          ...(rights.includes("publish_comment")
+            ? {
+                publish: getEndpoint(
+                  { href: "publishComment", method: "POST" },
+                  req
+                ),
+              }
+            : {}),
+        },
+      })),
   });
 };

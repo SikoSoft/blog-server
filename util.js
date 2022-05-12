@@ -330,20 +330,28 @@ module.exports = {
             },
             req
           ),
-          publishComments: getEndpoint(
-            {
-              href: "publishComments",
-              method: "POST",
-            },
-            req
-          ),
-          deleteComments: getEndpoint(
-            {
-              href: "deleteComments",
-              method: "POST",
-            },
-            req
-          ),
+          ...(rights.includes("publish_comment")
+            ? {
+                publishComments: getEndpoint(
+                  {
+                    href: "publishComments",
+                    method: "POST",
+                  },
+                  req
+                ),
+              }
+            : {}),
+          ...(rights.includes("delete_comment")
+            ? {
+                deleteComments: getEndpoint(
+                  {
+                    href: "deleteComments",
+                    method: "POST",
+                  },
+                  req
+                ),
+              }
+            : {}),
           uploadImage: getEndpoint(
             {
               href: "uploadImage/{type}",

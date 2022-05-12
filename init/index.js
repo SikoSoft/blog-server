@@ -19,8 +19,6 @@ module.exports = async function (context, req) {
     rights.includes("create_entry") ? ["newEntry", "entry", "POST"] : [],
     ["uploadImage", "uploadImage/{type}", "POST"],
     ["useToken", "useToken", "POST"],
-    ["publishComments", "publishComments", "POST"],
-    ["deleteComments", "deleteComments", "POST"],
     ["saveSetting", "saveSetting", "POST"],
     ["getDrafts", "drafts", "GET"],
     ["getFilters", "getFilters", "GET"],
