@@ -51,8 +51,8 @@ async function getSettings() {
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const connection = await db.getConnection();
-      const settingsRows = await connection.query("SELECT * FROM settings");
+      const connection = await db.getConnectionNew();
+      const settingsRows = await connection.select("*").from("settings");
       const settings = {};
       for (setting of spec.settings) {
         const matchedRow = settingsRows.filter(
@@ -78,8 +78,8 @@ async function getTagRoles() {
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const connection = await db.getConnection();
-      const tagRolesRows = await connection.query("SELECT * FROM tags_rights");
+      const connection = await db.getConnectionNew();
+      const tagRolesRows = await connection.select("*").from("tags_rights");
       state.tagRoles = {};
       tagRolesRows.forEach((row) => {
         if (!state.tagRoles[row.tag]) {
@@ -100,8 +100,8 @@ async function getRoleRights() {
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const connection = await db.getConnection();
-      const rights = await connection.query("SELECT * FROM roles_rights");
+      const connection = await db.getConnectionNew();
+      const rights = await connection.select("*").from("roles_rights");
       state.rights = rights;
       resolve(rights);
     } catch (error) {
@@ -122,11 +122,13 @@ async function getSessionRole(sessToken = "") {
         return;
       }
       let role = settings.role_guest;
-      const connection = await db.getConnection();
-      const [session] = await connection.query(
-        "SELECT * FROM tokens_consumed as c, tokens as t WHERE c.session = ? && t.code = c.code",
-        [sessToken]
-      );
+      const connection = await db.getConnectionNew();
+      const [session] = await connection
+        .select("*")
+        .from("tokens_consumed")
+        .join("tokens", "tokens.code", "=", "tokens_consumed.code")
+        .where("tokens_consumed.session", sessToken);
+
       if (session) {
         role = session.role;
       }
@@ -166,10 +168,11 @@ async function getEntriesTags() {
     return Promise.resolve(state.entriesTags);
   }
   return new Promise(async (resolve) => {
-    const connection = await db.getConnection();
-    const tagRows = await connection.query(
-      "SELECT * FROM entries_tags ORDER BY entry_id, tag"
-    );
+    const connection = await db.getConnectionNew();
+    const tagRows = await connection
+      .select("*")
+      .from("entries_tags")
+      .orderBy("entry_id", "tag");
     const entriesTags = {};
     tagRows.forEach((tagRow) => {
       entriesTags[tagRow.entry_id] = [
@@ -236,12 +239,12 @@ module.exports = {
   getId: async (title) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const connection = await db.getConnection();
+        const connection = await db.getConnectionNew();
         const id = sanitizeTitle(title);
-        const qRes = await connection.query(
-          "SELECT COUNT(*) AS total FROM entries WHERE id REGEXP ?",
-          [id]
-        );
+        const qRes = await connection
+          .count("* as total")
+          .from("entries")
+          .where("id", "REGEXP", `%${id}%`);
         resolve(qRes[0].total === 0 ? id : `${id}-${qRes[0].total + 1}`);
       } catch (error) {
         reject(error);
@@ -370,8 +373,8 @@ module.exports = {
     }
     return new Promise(async (resolve, reject) => {
       try {
-        const connection = await db.getConnection();
-        const idRows = await connection.query("SELECT id FROM entries");
+        const connection = await db.getConnectionNew();
+        const idRows = await connection.select("id").from("entries");
         const role = await getSessionRole(sessToken);
         const tagRoles = await getTagRoles();
         const entriesTags = await getEntriesTags();
