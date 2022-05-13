@@ -42,6 +42,15 @@ module.exports = async function (context, req) {
     ["updateRole", "role/{role}", "PUT"],
     ["deleteRole", "role/{role}", "DELETE"],
     ["getTokens", "tokens", "GET"],
+    rights.includes("manage_images")
+      ? ["addImageSize", "imageSize", "POST"]
+      : [],
+    rights.includes("manage_images")
+      ? ["updateImageSize", "imageSize", "PUT"]
+      : [],
+    rights.includes("manage_images")
+      ? ["deleteImageSize", "imageSize", "DELETE"]
+      : [],
   ].forEach((endpoint) => {
     links[endpoint[0]] = getEndpoint(
       {
