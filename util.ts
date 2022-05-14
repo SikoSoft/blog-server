@@ -223,8 +223,10 @@ const jsonReply = (context: Context, object: Object): void => {
 };
 
 const getLastEntry = async (query: any): Promise<any> => {
-  const entry = await query.orderBy("created", "asc").limit(1);
-  return entry.id ? entry.id : "";
+  return new Promise(async (resolve) => {
+    const entry = await query.orderBy("created", "asc").limit(1).first();
+    resolve(entry.id ? entry.id : "");
+  });
 };
 
 const getExcludedEntries = async (sessToken: string = ""): Promise<any> => {

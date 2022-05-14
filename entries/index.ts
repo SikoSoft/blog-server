@@ -22,17 +22,12 @@ const httpTrigger: AzureFunction = async function (
     .from("entries")
     .whereNotIn("id", excludedEntries)
     .andWhere({ listed: 1, public: drafts ? 0 : 1 });
-  /*
-  const query = `SELECT * FROM entries WHERE listed = 1 && public = ? ${
-    (excludedEntries.length ? " AND " : "") +
-    excludedEntries.map((excludedId) => `id != '${excludedId}'`).join(" AND ")
-  }`;
-  */
-  const lastEntryId = await getLastEntry(query);
-  const limit = `LIMIT ${
-    context.bindingData.start ? parseInt(context.bindingData.start) : 0
-  }, ${settings.per_load ? settings.per_load : 10}`;
-  const rawEntries = await query.orderBy("created", "desc").limit(limit);
+  const lastEntryId = await getLastEntry(query.clone());
+  context.log("lastEntryId", lastEntryId);
+  const rawEntries = await query
+    .orderBy("created", "desc")
+    .offset(context.bindingData.start ? parseInt(context.bindingData.start) : 0)
+    .limit(settings.per_load ? settings.per_load : 10);
   if (rawEntries.length) {
     const processedEntries = rawEntries.map((entry) =>
       processEntry(req, entry)
