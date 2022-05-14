@@ -330,8 +330,15 @@ const processEntry = async (
   });
 };
 
+const getIp = (req: HttpRequest): string => {
+  return req.headers["x-forwarded-for"]
+    ? req.headers["x-forwarded-for"].replace(/:[0-9]+/, "")
+    : "0.0.0.0";
+};
+
 export {
   getConnection,
+  //getConnectionRaw,
   baseUrl,
   shortDate,
   getEndpoint,
@@ -345,6 +352,7 @@ export {
   getLastEntry,
   getExcludedEntries,
   processEntry,
+  getIp,
 };
 
 export default {

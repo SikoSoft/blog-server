@@ -1,3 +1,5 @@
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+
 const azureStorage = require("azure-storage");
 const multipart = require("parse-multipart");
 const { shortDate } = require("../util");
@@ -11,7 +13,7 @@ const getBlobName = (fileName) => {
 };
 
 async function writeBlobContent(blobName, stream, streamLength, contentType) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     blobService.createBlockBlobFromStream(
       containerName,
       blobName,
@@ -24,7 +26,7 @@ async function writeBlobContent(blobName, stream, streamLength, contentType) {
       },
       (err) => {
         if (err) {
-          context.log("error encountered", err);
+          console.log("error encountered", err);
           reject(err);
         }
         resolve();
@@ -33,7 +35,10 @@ async function writeBlobContent(blobName, stream, streamLength, contentType) {
   });
 }
 
-module.exports = async function (context, req) {
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+): Promise<any> {
   const boundary = multipart.getBoundary(req.headers["content-type"]);
   const parts = multipart.Parse(req.body, boundary);
   let blobName = getBlobName(parts[0].filename);
@@ -53,3 +58,5 @@ module.exports = async function (context, req) {
     }
   );
 };
+
+export default httpTrigger;
