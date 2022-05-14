@@ -6,5 +6,6 @@
       "direction": "in",
       "schedule": "0 */1 * * * *"
     }
-  ]
+  ],
+  "scriptFile": "../dist/autoPublish/index.js"
 }

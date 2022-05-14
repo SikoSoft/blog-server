@@ -1,7 +1,8 @@
 import { URL } from "url";
-import {getConnection} from "./database";
+import { getConnection } from "./database";
 import spec from "blog-spec";
-import { Context } from "@azure/functions";
+import { Context, HttpRequest } from "@azure/functions";
+import { BlogEntry } from "./interfaces/BlogEntry";
 
 /*const URL = require("url").URL;
 const fetch = require("node-fetch");
@@ -60,7 +61,6 @@ async function getSettings() {
       const connection = await getConnection();
       const settingsRows = await connection.select("*").from("settings");
       const settings = {};
-      console.log("###################SETTINGS################", spec);
       for (const setting of spec.settings) {
         const matchedRow = settingsRows.filter(
           (settingRow) => settingRow.id === setting.id
@@ -220,32 +220,132 @@ const jsonReply = (context: Context, object: Object): void => {
     },
     body: JSON.stringify(object),
   };
-}
+};
+
+const getLastEntry = async (query: any): Promise<any> => {
+  const entry = await query.orderBy("created", "asc").limit(1);
+  return entry.id ? entry.id : "";
+};
+
+const getExcludedEntries = async (sessToken: string = ""): Promise<any> => {
+  if (state.excludedEntries && state.excludedEntries[sessToken]) {
+    return Promise.resolve(state.excludedEntries[sessToken]);
+  }
+  return new Promise(async (resolve, reject) => {
+    try {
+      const connection = await getConnection();
+      const idRows = await connection.select("id").from("entries");
+      const role = await getSessionRole(sessToken);
+      const tagRoles = await getTagRoles();
+      const entriesTags = await getEntriesTags();
+      const allIds = idRows.map((idRow) => idRow.id);
+      const excludedEntries = allIds.filter((id) => {
+        if (entriesTags[id]) {
+          let allowedForAllTags = true;
+          entriesTags[id].forEach((entryTag) => {
+            if (tagRoles[entryTag] && tagRoles[entryTag].indexOf(role) === -1) {
+              allowedForAllTags = false;
+            }
+          });
+          if (!allowedForAllTags) {
+            return true;
+          }
+        }
+        return false;
+      });
+      state.excludedEntries[sessToken] = excludedEntries;
+      resolve(excludedEntries);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const processEntry = async (
+  req: HttpRequest,
+  entry: BlogEntry
+): Promise<any> => {
+  return new Promise(async (resolve) => {
+    const tags = await getEntriesTags();
+    const endpoint = `entry/${entry.id}`;
+    const furtherReading = await getFurtherReading(entry.id);
+    const rights = await getSessionRights(req.headers["sess-token"]);
+    resolve({
+      ...entry,
+      furtherReading,
+      tags: tags[entry.id] ? tags[entry.id] : [],
+      links: {
+        view: getEndpoint({ href: endpoint, method: "GET" }, req),
+        ...(rights.includes("update_entry")
+          ? { save: getEndpoint({ href: endpoint, method: "PUT" }, req) }
+          : {}),
+        ...(rights.includes("delete_entry")
+          ? { delete: getEndpoint({ href: endpoint, method: "DELETE" }, req) }
+          : {}),
+        postComment: getEndpoint(
+          {
+            href: `postComment/${entry.id}`,
+            method: "POST",
+          },
+          req
+        ),
+        getComments: getEndpoint(
+          {
+            href: `comments/${entry.id}`,
+            method: "GET",
+          },
+          req
+        ),
+        ...(rights.includes("publish_comment")
+          ? {
+              publishComments: getEndpoint(
+                {
+                  href: "publishComments",
+                  method: "POST",
+                },
+                req
+              ),
+            }
+          : {}),
+        ...(rights.includes("delete_comment")
+          ? {
+              deleteComments: getEndpoint(
+                {
+                  href: "deleteComments",
+                  method: "POST",
+                },
+                req
+              ),
+            }
+          : {}),
+        uploadImage: getEndpoint(
+          {
+            href: "uploadImage/{type}",
+            method: "POST",
+          },
+          req
+        ),
+      },
+    });
+  });
+};
 
 export {
   getConnection,
-
   baseUrl,
-
   shortDate,
-
   getEndpoint,
-
   getSettings,
-
   getTagRoles,
-
   getRoleRights,
-
   getSessionRole,
-
   getSessionRights,
-
   getEntriesTags,
-
-  jsonReply
-
-}
+  jsonReply,
+  getLastEntry,
+  getExcludedEntries,
+  processEntry,
+};
 
 export default {
   getConnection,
@@ -333,122 +433,5 @@ export default {
     } else {
       state = { ...JSON.parse(JSON.stringify(initialState)) };
     }
-  },
-
-  processEntry: async (req, entry) => {
-    return new Promise(async (resolve) => {
-      const tags = await getEntriesTags();
-      const endpoint = `entry/${entry.id}`;
-      const furtherReading = await getFurtherReading(entry.id);
-      const rights = await getSessionRights(req.headers["sess-token"]);
-      resolve({
-        ...entry,
-        furtherReading,
-        tags: tags[entry.id] ? tags[entry.id] : [],
-        links: {
-          view: getEndpoint({ href: endpoint, method: "GET" }, req),
-          ...(rights.includes("update_entry")
-            ? { save: getEndpoint({ href: endpoint, method: "PUT" }, req) }
-            : {}),
-          ...(rights.includes("delete_entry")
-            ? { delete: getEndpoint({ href: endpoint, method: "DELETE" }, req) }
-            : {}),
-          postComment: getEndpoint(
-            {
-              href: `postComment/${entry.id}`,
-              method: "POST",
-            },
-            req
-          ),
-          getComments: getEndpoint(
-            {
-              href: `comments/${entry.id}`,
-              method: "GET",
-            },
-            req
-          ),
-          ...(rights.includes("publish_comment")
-            ? {
-                publishComments: getEndpoint(
-                  {
-                    href: "publishComments",
-                    method: "POST",
-                  },
-                  req
-                ),
-              }
-            : {}),
-          ...(rights.includes("delete_comment")
-            ? {
-                deleteComments: getEndpoint(
-                  {
-                    href: "deleteComments",
-                    method: "POST",
-                  },
-                  req
-                ),
-              }
-            : {}),
-          uploadImage: getEndpoint(
-            {
-              href: "uploadImage/{type}",
-              method: "POST",
-            },
-            req
-          ),
-        },
-      });
-    });
-  },
-
-  getLastEntry: async (query, queryArgs) => {
-    return Promise.resolve();
-    /*
-    return new Promise(async (resolve) => {
-      const connection = await db.getConnection();
-      const lastEntry = await connection.query(
-        `${query} ORDER BY created ASC LIMIT 1`,
-        queryArgs
-      );
-      resolve(lastEntry.length ? lastEntry[0].id : -1);
-    });
-    */
-  },
-
-  getExcludedEntries: async (sessToken = "") => {
-    if (state.excludedEntries && state.excludedEntries[sessToken]) {
-      return Promise.resolve(state.excludedEntries[sessToken]);
-    }
-    return new Promise(async (resolve, reject) => {
-      try {
-        const connection = await getConnection();
-        const idRows = await connection.select("id").from("entries");
-        const role = await getSessionRole(sessToken);
-        const tagRoles = await getTagRoles();
-        const entriesTags = await getEntriesTags();
-        const allIds = idRows.map((idRow) => idRow.id);
-        const excludedEntries = allIds.filter((id) => {
-          if (entriesTags[id]) {
-            let allowedForAllTags = true;
-            entriesTags[id].forEach((entryTag) => {
-              if (
-                tagRoles[entryTag] &&
-                tagRoles[entryTag].indexOf(role) === -1
-              ) {
-                allowedForAllTags = false;
-              }
-            });
-            if (!allowedForAllTags) {
-              return true;
-            }
-          }
-          return false;
-        });
-        state.excludedEntries[sessToken] = excludedEntries;
-        resolve(excludedEntries);
-      } catch (error) {
-        reject(error);
-      }
-    });
   },
 };
