@@ -3,7 +3,12 @@
   "version": "0.9.0",
   "description": "Backend function app for my blog",
   "scripts": {
-    "start": "func start --port 7777 --javascript",
+    "build": "tsc",
+    "build:production": "npm run prestart && npm prune --production",
+    "watch": "tsc --w",
+    "prestart": "npm run build && func extensions install",
+    "start:host": "func start --port 7777",
+    "start": "npm-run-all --parallel start:host watch",
     "setup": "node setup.js"
   },
   "author": "",
@@ -24,6 +29,9 @@
     "uuid": "^3.4.0"
   },
   "devDependencies": {
-    "prettier": "^2.6.2"
+    "prettier": "^2.6.2",
+    "@azure/functions": "^3.0.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^4.6.4"
   }
 }

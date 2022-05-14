@@ -1,8 +1,14 @@
-const URL = require("url").URL;
+import { URL } from "url";
+import {getConnection} from "./database";
+import spec from "blog-spec";
+import { Context } from "@azure/functions";
+
+/*const URL = require("url").URL;
 const fetch = require("node-fetch");
 const queryString = require("query-string");
 const db = require("./database");
 const spec = require("blog-spec");
+*/
 
 const initialState = {
   session: {},
@@ -51,10 +57,11 @@ async function getSettings() {
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const connection = await db.getConnectionNew();
+      const connection = await getConnection();
       const settingsRows = await connection.select("*").from("settings");
       const settings = {};
-      for (setting of spec.settings) {
+      console.log("###################SETTINGS################", spec);
+      for (const setting of spec.settings) {
         const matchedRow = settingsRows.filter(
           (settingRow) => settingRow.id === setting.id
         );
@@ -78,7 +85,7 @@ async function getTagRoles() {
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const connection = await db.getConnectionNew();
+      const connection = await getConnection();
       const tagRolesRows = await connection.select("*").from("tags_rights");
       state.tagRoles = {};
       tagRolesRows.forEach((row) => {
@@ -100,7 +107,7 @@ async function getRoleRights() {
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const connection = await db.getConnectionNew();
+      const connection = await getConnection();
       const rights = await connection.select("*").from("roles_rights");
       state.rights = rights;
       resolve(rights);
@@ -122,7 +129,7 @@ async function getSessionRole(sessToken = "") {
         return;
       }
       let role = settings.role_guest;
-      const connection = await db.getConnectionNew();
+      const connection = await getConnection();
       const [session] = await connection
         .select("*")
         .from("tokens_consumed")
@@ -168,7 +175,7 @@ async function getEntriesTags() {
     return Promise.resolve(state.entriesTags);
   }
   return new Promise(async (resolve) => {
-    const connection = await db.getConnectionNew();
+    const connection = await getConnection();
     const tagRows = await connection
       .select("*")
       .from("entries_tags")
@@ -205,8 +212,18 @@ async function getFurtherReading(entryId) {
   return furtherReading;
 }
 
-module.exports = {
-  db,
+const jsonReply = (context: Context, object: Object): void => {
+  context.res = {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(object),
+  };
+}
+
+export {
+  getConnection,
 
   baseUrl,
 
@@ -226,20 +243,37 @@ module.exports = {
 
   getEntriesTags,
 
-  jsonReply: (context, object) => {
-    context.res = {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(object),
-    };
-  },
+  jsonReply
+
+}
+
+export default {
+  getConnection,
+
+  baseUrl,
+
+  shortDate,
+
+  getEndpoint,
+
+  getSettings,
+
+  getTagRoles,
+
+  getRoleRights,
+
+  getSessionRole,
+
+  getSessionRights,
+
+  getEntriesTags,
+
+  jsonReply,
 
   getId: async (title) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const connection = await db.getConnectionNew();
+        const connection = await getConnection();
         const id = sanitizeTitle(title);
         const qRes = await connection
           .count("* as total")
@@ -259,6 +293,8 @@ module.exports = {
   },
 
   verifyCaptcha: async (response, ip) => {
+    return Promise.resolve();
+    /*
     if (!process.env.RECAPTCHA_SECRET) {
       return Promise.resolve();
     }
@@ -280,6 +316,7 @@ module.exports = {
         })
         .catch((e) => reject(e));
     });
+    */
   },
 
   getTextFromDelta(delta) {
@@ -365,6 +402,8 @@ module.exports = {
   },
 
   getLastEntry: async (query, queryArgs) => {
+    return Promise.resolve();
+    /*
     return new Promise(async (resolve) => {
       const connection = await db.getConnection();
       const lastEntry = await connection.query(
@@ -373,6 +412,7 @@ module.exports = {
       );
       resolve(lastEntry.length ? lastEntry[0].id : -1);
     });
+    */
   },
 
   getExcludedEntries: async (sessToken = "") => {
@@ -381,7 +421,7 @@ module.exports = {
     }
     return new Promise(async (resolve, reject) => {
       try {
-        const connection = await db.getConnectionNew();
+        const connection = await getConnection();
         const idRows = await connection.select("id").from("entries");
         const role = await getSessionRole(sessToken);
         const tagRoles = await getTagRoles();

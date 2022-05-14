@@ -1,14 +1,17 @@
-const {
-  db,
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+
+
+import {
+  getConnection,
   getEndpoint,
   getSettings,
   getSessionRole,
   getSessionRights,
   jsonReply,
-} = require("../util");
+} from "../util";
 
-module.exports = async function (context, req) {
-  const rights = await getSessionRights(req.headers["sess-token"]);
+const httpTrigger: AzureFunction = async function(context: Context, req: HttpRequest): Promise<void> {
+const rights = await getSessionRights(req.headers["sess-token"]);
   const links = {};
   [
     ["getEntry", "entry/{id}", "GET"],
@@ -67,7 +70,7 @@ module.exports = async function (context, req) {
     role: sessionRole ? sessionRole : settings.role_guest,
     rights,
   };
-  const connection = await db.getConnectionNew();
+  const connection = await getConnection();
   const qRes = await connection.select("*").from("roles");
   const roles = qRes.map((row) => ({
     id: row.id,
@@ -80,3 +83,5 @@ module.exports = async function (context, req) {
     links,
   });
 };
+
+export default httpTrigger;
