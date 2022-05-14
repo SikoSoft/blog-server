@@ -67,8 +67,8 @@ module.exports = async function (context, req) {
     role: sessionRole ? sessionRole : settings.role_guest,
     rights,
   };
-  const connection = await db.getConnection();
-  const qRes = await connection.query("SELECT * FROM roles");
+  const connection = await db.getConnectionNew();
+  const qRes = await connection.select("*").from("roles");
   const roles = qRes.map((row) => ({
     id: row.id,
     name: row.name,
