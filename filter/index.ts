@@ -1,44 +1,44 @@
-const {
-  db,
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { parse } from "query-string";
+
+import {
+  getConnection,
   jsonReply,
   processEntry,
   getSettings,
   getLastEntry,
-} = require("../util.js");
+} from "../util.js";
 
-module.exports = async function (context, req) {
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+): Promise<any> {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const settings = await getSettings();
-  const connection = await db.getConnection();
+  const connection = await getConnection();
   if (req.method === "POST") {
-    await connection
-      .query("INSERT INTO filters (id, label, image) VALUES(?, ?, ?)", [
-        body.id,
-        body.label,
-        body.image,
-      ])
-      .then(async (res) => {
-        jsonReply(context, { success: res.affectedRows === 1 });
-      });
+    const res = await connection("filters").insert({
+      id: body.id,
+      label: body.label,
+      image: body.image,
+    });
+    jsonReply(context, { success: res.length === 1 });
   } else if (req.method === "PUT") {
-    const res = await connection.query(
-      "UPDATE filters SET id = ?, label = ?, image = ? WHERE id = ?",
-      [body.newId, body.label, body.image, body.id]
-    );
-
-    jsonReply(context, { success: res.affectedRows === 1 });
+    const res = await connection("filters")
+      .update({ id: body.newId, label: body.label, image: body.image })
+      .where("id", body.id);
+    jsonReply(context, { success: res === 1 });
   } else if (req.method === "DELETE") {
-    const res = await connection.query("DELETE FROM filters WHERE id = ?", [
-      context.bindingData.id,
-    ]);
-    jsonReply(context, { success: res.affectedRows === 1 });
+    const res = await connection("filters")
+      .where("id", context.bindingData.id)
+      .delete();
+    jsonReply(context, { success: res === 1 });
   } else {
-    const rules = await connection.query(
-      "SELECT * FROM filters_rules WHERE filter_id = ?",
-      [context.bindingData.id]
-    );
-
+    const rules = await connection
+      .select("*")
+      .from("filters_rules")
+      .where("filter_id", context.bindingData.id);
     const tagsToCheck = [];
     rules.forEach((filter) => {
       if (filter.type === "tag") {
@@ -46,12 +46,10 @@ module.exports = async function (context, req) {
       }
     });
     let entriesTags = {};
-    const tagsRows = await connection.query(
-      `SELECT * FROM entries_tags WHERE ${[...tagsToCheck]
-        .fill("tag = ?")
-        .join(" || ")}`,
-      tagsToCheck
-    );
+    const tagsRows = await connection
+      .select("*")
+      .from("entries_tags")
+      .whereIn("tag", tagsToCheck);
 
     tagsRows.forEach((tagRow) => {
       entriesTags[tagRow.entry_id] = entriesTags[tagRow.entry_id]
@@ -82,19 +80,19 @@ module.exports = async function (context, req) {
         filteredByTags.push(entryId);
       }
     });
-    const query = `SELECT * FROM entries WHERE listed = 1 && (${[
-      ...filteredByTags,
-    ]
-      .fill("id = ?")
-      .join(" || ")})`;
-    const lastEntryId = await getLastEntry(query, filteredByTags);
-    const limit = `LIMIT ${
-      context.bindingData.start ? parseInt(context.bindingData.start) : 0
-    }, ${settings.per_load ? settings.per_load : 10}`;
-    const rawEntries = await connection.query(
-      `${query} ORDER BY created DESC ${limit}`,
-      filteredByTags
-    );
+    const query = connection
+      .select("*")
+      .from("entries")
+      .whereIn("id", filteredByTags)
+      .andWhere("listed", 1);
+    const lastEntryId = await getLastEntry(query.clone());
+    const rawEntries = await query
+      .clone()
+      .orderBy("created", "desc")
+      .offset(
+        context.bindingData.start ? parseInt(context.bindingData.start) : 0
+      )
+      .limit(settings.per_load ? settings.per_load : 10);
 
     const processedEntries = rawEntries.map((entry) =>
       processEntry(req, entry)
