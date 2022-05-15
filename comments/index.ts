@@ -1,13 +1,24 @@
-const { db, getSessionRights, jsonReply, getEndpoint } = require("../util");
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-module.exports = async function (context, req) {
+import {
+  getConnection,
+  getSessionRights,
+  jsonReply,
+  getEndpoint,
+} from "../util";
+
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+) {
   const rights = await getSessionRights(req.headers["sess-token"]);
   const canViewUnpublished = rights.includes("view_unpublished_comment");
-  const connection = await db.getConnection();
-  const comments = await connection.query(
-    "SELECT * FROM comments WHERE entry_id = ? ORDER BY time DESC",
-    [context.bindingData.id]
-  );
+  const connection = await getConnection();
+  const comments = await connection
+    .select("*")
+    .from("comments")
+    .where("entry_id", context.bindingData.id)
+    .orderBy("time", "desc");
   jsonReply(context, {
     comments: comments
       .filter((comment) => comment.public === 1 || canViewUnpublished)
@@ -34,3 +45,5 @@ module.exports = async function (context, req) {
       })),
   });
 };
+
+export default httpTrigger;

@@ -5,11 +5,7 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": [
-        "post",
-        "put",
-        "delete"
-      ],
+      "methods": ["post", "put", "delete"],
       "route": "token/{code?}"
     },
     {
@@ -17,5 +13,6 @@
       "direction": "out",
       "name": "res"
     }
-  ]
+  ],
+  "scriptFile": "../dist/token/index.js"
 }

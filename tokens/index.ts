@@ -1,8 +1,13 @@
-const { db, jsonReply, getEndpoint } = require("../util.js");
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-module.exports = async function (context, req) {
-  const connection = await db.getConnection();
-  let tokens = await connection.query("SELECT * FROM tokens ORDER by `code`");
+const { getConnection, jsonReply, getEndpoint } = require("../util.js");
+
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+) {
+  const connection = await getConnection();
+  let tokens = await connection.select("*").from("tokens").orderBy("code");
   if (tokens.length) {
     tokens = tokens.map((token) => ({
       ...token,
@@ -25,3 +30,5 @@ module.exports = async function (context, req) {
     tokens,
   });
 };
+
+export default httpTrigger;

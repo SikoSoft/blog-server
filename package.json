@@ -3,27 +3,34 @@
   "version": "0.9.0",
   "description": "Backend function app for my blog",
   "scripts": {
-    "start": "func start --port 7777 --javascript",
+    "build": "tsc",
+    "build:production": "npm run prestart && npm prune --production",
+    "watch": "tsc --w",
+    "prestart": "npm run build && func extensions install",
+    "start:host": "func start --port 7777",
+    "start": "npm-run-all --parallel start:host watch",
     "setup": "node setup.js"
   },
   "author": "",
   "dependencies": {
+    "axios": "^0.27.2",
     "azure-storage": "^2.10.3",
-    "blog-spec": "github:SikoSoft/blog-spec#2.1.2",
-    "bookshelf": "^1.2.0",
+    "blog-spec": "github:SikoSoft/blog-spec#2.4.0",
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "into-stream": "^5.1.1",
     "knex": "^2.0.0",
-    "mariadb": "^2.1.5",
     "mysql": "^2.18.1",
-    "node-fetch": "^2.6.7",
     "parse-multipart": "^1.0.4",
     "path": "^0.12.7",
     "query-string": "^6.10.1",
     "uuid": "^3.4.0"
   },
   "devDependencies": {
-    "prettier": "^2.6.2"
+    "@azure/functions": "^3.0.0",
+    "@types/mysql": "^2.15.21",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.6.2",
+    "typescript": "^4.6.4"
   }
 }
