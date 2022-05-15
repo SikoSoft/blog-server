@@ -1,13 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 
-const { getConnection, jsonReply, getEndpoint } = require("../util.js");
+import { getConnection, jsonReply, getEndpoint } from "../util";
 
 const getToken = async (connection, req: HttpRequest, code: string) => {
-  const [token] = await connection.query(
-    "SELECT * FROM tokens WHERE code = ?",
-    [code]
-  );
+  const [token] = await connection
+    .select("*")
+    .from("tokens")
+    .where("code", code);
   token.links = {
     update: getEndpoint({ href: `token/${code}`, method: "PUT" }, req),
     delete: getEndpoint({ href: `token/${code}`, method: "DELETE" }, req),
@@ -42,7 +42,7 @@ const httpTrigger: AzureFunction = async function (
     const result = await connection("tokens")
       .where("code", context.bindingData.code)
       .delete();
-    jsonReply(context, { success: result.affectedRows > 0 });
+    jsonReply(context, { success: result > 0 });
   }
 };
 
