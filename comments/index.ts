@@ -1,11 +1,11 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-const {
+import {
   getConnection,
   getSessionRights,
   jsonReply,
   getEndpoint,
-} = require("../util");
+} from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -14,10 +14,11 @@ const httpTrigger: AzureFunction = async function (
   const rights = await getSessionRights(req.headers["sess-token"]);
   const canViewUnpublished = rights.includes("view_unpublished_comment");
   const connection = await getConnection();
-  const comments = await connection.query(
-    "SELECT * FROM comments WHERE entry_id = ? ORDER BY time DESC",
-    [context.bindingData.id]
-  );
+  const comments = await connection
+    .select("*")
+    .from("comments")
+    .where("entry_id", context.bindingData.id)
+    .orderBy("time", "desc");
   jsonReply(context, {
     comments: comments
       .filter((comment) => comment.public === 1 || canViewUnpublished)

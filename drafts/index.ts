@@ -1,13 +1,12 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import entriesEndpoint from "../entries";
 
-const entries = require("../entries/");
-
-const httpTrigger: AzureFunction = async function (
+const httpTrigger: AzureFunction = async (
   context: Context,
   req: HttpRequest
-) {
+): Promise<any> => {
   req.headers.type = "draft";
-  await entries(context, req);
+  entriesEndpoint(context, req);
 };
 
 export default httpTrigger;
