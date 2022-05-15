@@ -112,3 +112,5 @@ const httpTrigger: AzureFunction = async function (
     });
   }
 };
+
+export default httpTrigger;
