@@ -6,13 +6,6 @@ import { Context, HttpRequest } from "@azure/functions";
 import { BlogEntry } from "./interfaces/BlogEntry";
 import { stringify } from "query-string";
 
-/*const URL = require("url").URL;
-const fetch = require("node-fetch");
-const queryString = require("query-string");
-const db = require("./database");
-const spec = require("blog-spec");
-*/
-
 const initialState = {
   session: {},
   excludedEntries: {},
@@ -20,18 +13,18 @@ const initialState = {
 
 let state = { ...JSON.parse(JSON.stringify(initialState)) };
 
-function pad(x, padding = 2) {
+function pad(x: number, padding: number = 2): string {
   return x.toString().padStart(padding, "0");
 }
 
-function shortDate(time = new Date()) {
+function shortDate(time: Date = new Date()): string {
   const date = new Date(time);
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
     date.getDate()
   )}`;
 }
 
-function baseUrl(req) {
+function baseUrl(req): string {
   const url = new URL(req.originalUrl);
   const pathDirs = url.pathname.split("/");
   return `${url.origin}${pathDirs
@@ -47,7 +40,7 @@ function getEndpoint(endpoint, req) {
   };
 }
 
-function sanitizeTitle(title) {
+function sanitizeTitle(title: string): string {
   return title
     .toLowerCase()
     .replace(/ /g, "-")
@@ -119,7 +112,7 @@ async function getRoleRights() {
   });
 }
 
-async function getSessionRole(sessToken = "") {
+async function getSessionRole(sessToken: string = "") {
   if (state.session[sessToken] && state.session[sessToken].role) {
     return Promise.resolve(state.session[sessToken].role);
   }
@@ -194,7 +187,7 @@ async function getEntriesTags() {
   });
 }
 
-async function getFurtherReading(entryId) {
+async function getFurtherReading(entryId: string) {
   const settings = await getSettings();
   if (settings.further_reading_min_tags === 0) {
     return [];
@@ -225,7 +218,7 @@ const jsonReply = (context: Context, object: Object): void => {
 };
 
 const getLastEntry = async (query: any): Promise<any> => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve): Promise<any> => {
     try {
       const entry = await query.orderBy("created", "asc").limit(1).first();
       resolve(entry?.id ? entry.id : "");
@@ -392,9 +385,25 @@ const getTextFromDelta = (delta): any => {
   }, "");
 };
 
+const getId = async (title: string): Promise<string> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const connection = await getConnection();
+      const id = sanitizeTitle(title);
+      const qRes = await connection
+        .count("* as total")
+        .from("entries")
+        .where("id", "REGEXP", `%${id}%`)
+        .first();
+      resolve(qRes.total === 0 ? id : `${id}-${qRes.total + 1}`);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 export {
   getConnection,
-  //getConnectionRaw,
   baseUrl,
   shortDate,
   getEndpoint,
@@ -409,98 +418,8 @@ export {
   getExcludedEntries,
   processEntry,
   getIp,
+  getId,
   verifyCaptcha,
   flushState,
   getTextFromDelta,
-};
-
-export default {
-  getConnection,
-
-  baseUrl,
-
-  shortDate,
-
-  getEndpoint,
-
-  getSettings,
-
-  getTagRoles,
-
-  getRoleRights,
-
-  getSessionRole,
-
-  getSessionRights,
-
-  getEntriesTags,
-
-  jsonReply,
-
-  getId: async (title) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const connection = await getConnection();
-        const id = sanitizeTitle(title);
-        const qRes = await connection
-          .count("* as total")
-          .from("entries")
-          .where("id", "REGEXP", `%${id}%`)
-          .first();
-        console.log("############GETID:::", qRes);
-        resolve(qRes.total === 0 ? id : `${id}-${qRes.total + 1}`);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-
-  getIp: (req) => {
-    return req.headers["x-forwarded-for"]
-      ? req.headers["x-forwarded-for"].replace(/:[0-9]+/, "")
-      : "0.0.0.0";
-  },
-
-  verifyCaptcha: async (response, ip) => {
-    return Promise.resolve();
-    /*
-    if (!process.env.RECAPTCHA_SECRET) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve, reject) => {
-      fetch("https://www.google.com/recaptcha/api/siteverify", {
-        method: "POST",
-        headers: {
-          "content-type": "application/x-www-form-urlencoded",
-        },
-        body: queryString.stringify({
-          secret: process.env.RECAPTCHA_SECRET,
-          response,
-          remoteip: ip,
-        }),
-      })
-        .then((response) => response.json())
-        .then((json) => {
-          resolve(json);
-        })
-        .catch((e) => reject(e));
-    });
-    */
-  },
-
-  getTextFromDelta(delta) {
-    return delta.reduce((accumulator, op) => {
-      if (typeof op.insert === "string") {
-        return accumulator + op.insert;
-      }
-    }, "");
-  },
-
-  flushState: (key) => {
-    if (key) {
-      delete state[key];
-    } else {
-      state = { ...JSON.parse(JSON.stringify(initialState)) };
-    }
-  },
 };
