@@ -1,8 +1,10 @@
 import { URL } from "url";
+import axios from "axios";
 import { getConnection } from "./database";
-import spec from "blog-spec";
+import spec = require("blog-spec");
 import { Context, HttpRequest } from "@azure/functions";
 import { BlogEntry } from "./interfaces/BlogEntry";
+import { stringify } from "query-string";
 
 /*const URL = require("url").URL;
 const fetch = require("node-fetch");
@@ -223,9 +225,13 @@ const jsonReply = (context: Context, object: Object): void => {
 };
 
 const getLastEntry = async (query: any): Promise<any> => {
-  return new Promise(async (resolve) => {
-    const entry = await query.orderBy("created", "asc").limit(1).first();
-    resolve(entry.id ? entry.id : "");
+  return new Promise(async (resolve, reject) => {
+    try {
+      const entry = await query.orderBy("created", "asc").limit(1).first();
+      resolve(entry?.id ? entry.id : "");
+    } catch (error) {
+      console.error(error);
+    }
   });
 };
 
@@ -267,68 +273,72 @@ const processEntry = async (
   req: HttpRequest,
   entry: BlogEntry
 ): Promise<any> => {
-  return new Promise(async (resolve) => {
-    const tags = await getEntriesTags();
-    const endpoint = `entry/${entry.id}`;
-    const furtherReading = await getFurtherReading(entry.id);
-    const rights = await getSessionRights(req.headers["sess-token"]);
-    resolve({
-      ...entry,
-      furtherReading,
-      tags: tags[entry.id] ? tags[entry.id] : [],
-      links: {
-        view: getEndpoint({ href: endpoint, method: "GET" }, req),
-        ...(rights.includes("update_entry")
-          ? { save: getEndpoint({ href: endpoint, method: "PUT" }, req) }
-          : {}),
-        ...(rights.includes("delete_entry")
-          ? { delete: getEndpoint({ href: endpoint, method: "DELETE" }, req) }
-          : {}),
-        postComment: getEndpoint(
-          {
-            href: `postComment/${entry.id}`,
-            method: "POST",
-          },
-          req
-        ),
-        getComments: getEndpoint(
-          {
-            href: `comments/${entry.id}`,
-            method: "GET",
-          },
-          req
-        ),
-        ...(rights.includes("publish_comment")
-          ? {
-              publishComments: getEndpoint(
-                {
-                  href: "publishComments",
-                  method: "POST",
-                },
-                req
-              ),
-            }
-          : {}),
-        ...(rights.includes("delete_comment")
-          ? {
-              deleteComments: getEndpoint(
-                {
-                  href: "deleteComments",
-                  method: "POST",
-                },
-                req
-              ),
-            }
-          : {}),
-        uploadImage: getEndpoint(
-          {
-            href: "uploadImage/{type}",
-            method: "POST",
-          },
-          req
-        ),
-      },
-    });
+  return new Promise(async (resolve, reject) => {
+    try {
+      const tags = await getEntriesTags();
+      const endpoint = `entry/${entry.id}`;
+      const furtherReading = await getFurtherReading(entry.id);
+      const rights = await getSessionRights(req.headers["sess-token"]);
+      resolve({
+        ...entry,
+        furtherReading,
+        tags: tags[entry.id] ? tags[entry.id] : [],
+        links: {
+          view: getEndpoint({ href: endpoint, method: "GET" }, req),
+          ...(rights.includes("update_entry")
+            ? { save: getEndpoint({ href: endpoint, method: "PUT" }, req) }
+            : {}),
+          ...(rights.includes("delete_entry")
+            ? { delete: getEndpoint({ href: endpoint, method: "DELETE" }, req) }
+            : {}),
+          postComment: getEndpoint(
+            {
+              href: `postComment/${entry.id}`,
+              method: "POST",
+            },
+            req
+          ),
+          getComments: getEndpoint(
+            {
+              href: `comments/${entry.id}`,
+              method: "GET",
+            },
+            req
+          ),
+          ...(rights.includes("publish_comment")
+            ? {
+                publishComments: getEndpoint(
+                  {
+                    href: "publishComments",
+                    method: "POST",
+                  },
+                  req
+                ),
+              }
+            : {}),
+          ...(rights.includes("delete_comment")
+            ? {
+                deleteComments: getEndpoint(
+                  {
+                    href: "deleteComments",
+                    method: "POST",
+                  },
+                  req
+                ),
+              }
+            : {}),
+          uploadImage: getEndpoint(
+            {
+              href: "uploadImage/{type}",
+              method: "POST",
+            },
+            req
+          ),
+        },
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
@@ -336,6 +346,50 @@ const getIp = (req: HttpRequest): string => {
   return req.headers["x-forwarded-for"]
     ? req.headers["x-forwarded-for"].replace(/:[0-9]+/, "")
     : "0.0.0.0";
+};
+
+const verifyCaptcha = async (response, ip: string): Promise<any> => {
+  if (!process.env.RECAPTCHA_SECRET) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve, reject) => {
+    axios
+      .post<any>(
+        "https://www.google.com/recaptcha/api/siteverify",
+        stringify({
+          secret: process.env.RECAPTCHA_SECRET,
+          response,
+          remoteip: ip,
+        }),
+        {
+          headers: {
+            "content-type": "application/x-www-form-urlencoded",
+          },
+        }
+      )
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((e) => {
+        reject(e);
+      });
+  });
+};
+
+const flushState = (key?: string): void => {
+  if (key) {
+    delete state[key];
+  } else {
+    state = { ...JSON.parse(JSON.stringify(initialState)) };
+  }
+};
+
+const getTextFromDelta = (delta): any => {
+  return delta.reduce((accumulator, op) => {
+    if (typeof op.insert === "string") {
+      return accumulator + op.insert;
+    }
+  }, "");
 };
 
 export {
@@ -355,6 +409,9 @@ export {
   getExcludedEntries,
   processEntry,
   getIp,
+  verifyCaptcha,
+  flushState,
+  getTextFromDelta,
 };
 
 export default {
@@ -388,8 +445,10 @@ export default {
         const qRes = await connection
           .count("* as total")
           .from("entries")
-          .where("id", "REGEXP", `%${id}%`);
-        resolve(qRes[0].total === 0 ? id : `${id}-${qRes[0].total + 1}`);
+          .where("id", "REGEXP", `%${id}%`)
+          .first();
+        console.log("############GETID:::", qRes);
+        resolve(qRes.total === 0 ? id : `${id}-${qRes.total + 1}`);
       } catch (error) {
         reject(error);
       }
