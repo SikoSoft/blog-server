@@ -15,9 +15,7 @@ const httpTrigger: AzureFunction = async function (
     });
     jsonReply(context, { success: true });
   } else {
-    context.res = {
-      status: 400,
-    };
+    jsonReply(context, {}, 400);
   }
 };
 

@@ -1,4 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { jsonReply } from "../util";
 
 const azureStorage = require("azure-storage");
 const multipart = require("parse-multipart");
@@ -48,15 +49,10 @@ const httpTrigger: AzureFunction = async function (
   const buffer = new Buffer(parts[0].data, "base64");
   const stream = intoStream(buffer);
   const streamLength = buffer.length;
-  await writeBlobContent(blobName, stream, streamLength, parts[0].type).then(
-    () => {
-      context.res = {
-        body: JSON.stringify({
-          url: `${process.env.AZURE_STORAGE_URL}/${blobName}`,
-        }),
-      };
-    }
-  );
+  await writeBlobContent(blobName, stream, streamLength, parts[0].type);
+  jsonReply(context, {
+    url: `${process.env.AZURE_STORAGE_URL}/${blobName}`,
+  });
 };
 
 export default httpTrigger;

@@ -2,7 +2,7 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 
 import { v4 } from "uuid";
-import { getConnection, getIp } from "../util";
+import { getConnection, getIp, jsonReply } from "../util";
 import { errorCodes } from "blog-spec";
 
 const httpTrigger: AzureFunction = async function (
@@ -22,15 +22,13 @@ const httpTrigger: AzureFunction = async function (
   if (qRes.length) {
     const tokenRow = qRes[0];
     if (tokenRow.one_time === 1 && tokenRow.consumed > 0) {
-      context.res = {
-        status: 500,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
+      jsonReply(
+        context,
+        {
           errorCode: errorCodes.ERROR_TOKEN_CONSUMED,
-        }),
-      };
+        },
+        500
+      );
     } else {
       await connection("tokens")
         .update("consumed", tokenRow.consumed + 1)
@@ -47,17 +45,11 @@ const httpTrigger: AzureFunction = async function (
         .select("token")
         .from("roles")
         .where("id", tokenRow.role);
-      context.res = {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          role: tokenRow.role,
-          sessToken,
-          authToken: roleRes[0].code,
-        }),
-      };
+      jsonReply(context, {
+        role: tokenRow.role,
+        sessToken,
+        authToken: roleRes[0].code,
+      });
     }
   } else {
     await connection("tokens_invalid_attempts").insert({
@@ -65,15 +57,9 @@ const httpTrigger: AzureFunction = async function (
       ip,
       time: now,
     });
-    context.res = {
-      status: 500,
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        errorCode: errorCodes.ERROR_INVALID_TOKEN,
-      }),
-    };
+    jsonReply(context, {
+      errorCode: errorCodes.ERROR_INVALID_TOKEN,
+    });
   }
 };
 

@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { getConnection } from "../util";
+import { getConnection, jsonReply } from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -16,13 +16,7 @@ const httpTrigger: AzureFunction = async function (
     qRes = await connection.select("*").from("tags");
   }
   const tags = qRes.map((row) => row.tag);
-  context.res = {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: { tags },
-  };
+  jsonReply(context, { tags });
 };
 
 export default httpTrigger;

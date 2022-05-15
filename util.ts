@@ -207,13 +207,17 @@ async function getFurtherReading(entryId: string) {
   return furtherReading;
 }
 
-const jsonReply = (context: Context, object: Object): void => {
+const jsonReply = (
+  context: Context,
+  object: Object = {},
+  status: number = 200
+): void => {
   context.res = {
-    status: 200,
+    status,
     headers: {
       "content-type": "application/json",
     },
-    body: JSON.stringify(object),
+    ...(Object.keys(object).length ? { body: JSON.stringify(object) } : {}),
   };
 };
 

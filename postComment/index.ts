@@ -88,12 +88,13 @@ const httpTrigger: AzureFunction = async function (
       jsonReply(context, comment);
     }
   } else {
-    context.res = {
-      status: 500,
-      body: JSON.stringify({
+    jsonReply(
+      context,
+      {
         errorCode: errorCodes.ERROR_CAPTCHA_FAILED,
-      }),
-    };
+      },
+      500
+    );
   }
 };
 
