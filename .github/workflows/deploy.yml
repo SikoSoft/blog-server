@@ -1,6 +1,9 @@
 name: Deploy Node.js project to function app
 
-on: [push]
+on:
+  push:
+    branches:
+      - "master"
 
 env:
   AZURE_FUNCTIONAPP_NAME: blog-server
