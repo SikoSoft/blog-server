@@ -11,13 +11,14 @@ const {
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
-  req: HttpRequest
+  req: HttpRequest,
+  drafts: boolean = false
 ): Promise<any> {
   context.log("inside entries...");
   const settings = await getSettings();
   const connection = await getConnection();
   const excludedEntries = await getExcludedEntries(req.headers["sess-token"]);
-  const drafts = req.headers.type && req.headers.type === "draft";
+  //const drafts = req.headers.type && req.headers.type === "draft";
   const query = connection
     .select("*")
     .from("entries")

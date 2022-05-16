@@ -5,8 +5,7 @@ const httpTrigger: AzureFunction = async (
   context: Context,
   req: HttpRequest
 ): Promise<any> => {
-  req.headers.type = "draft";
-  entriesEndpoint(context, req);
+  return entriesEndpoint(context, req, true);
 };
 
 export default httpTrigger;
