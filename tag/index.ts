@@ -19,7 +19,6 @@ const httpTrigger: AzureFunction = async function (
     .where("tag", context.bindingData.tag);
 
   const entriesWithTag = tagEntries.map((tagEntry) => tagEntry.entry_id);
-
   const query = connection
     .select("*")
     .from("entries")
@@ -32,13 +31,10 @@ const httpTrigger: AzureFunction = async function (
     .orderBy("created", "desc")
     .offset(context.bindingData.start ? parseInt(context.bindingData.start) : 0)
     .limit(settings.per_load ? settings.per_load : 10);
-
-  const processedEntries = rawEntries.map((entry) => processEntry(req, entry));
-  await Promise.all(processedEntries);
   const entries = [];
-  processedEntries.forEach(async (entry) => {
-    await entry.then((data) => entries.push(data));
-  });
+  for (const entry of rawEntries) {
+    entries.push(await processEntry(req, entry));
+  }
   jsonReply(context, {
     entries,
     end:
