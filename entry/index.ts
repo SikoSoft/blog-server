@@ -10,15 +10,12 @@ import {
 } from "../util";
 
 const fieldsData = (fields: Array<string>, values: Array<any>) => {
-  return fields.reduce(
-    (prev, cur, index) => ({ ...prev, [cur]: values[index] }),
-    {}
-  );
+  return fields.reduce((prev, cur) => ({ ...prev, [cur]: values[cur] }), {});
 };
 
 const syncTags = async (connection, id, tags) => {
   return new Promise<void>(async (resolve) => {
-    await connection("entries_tags").where("entry_id", id).delete();
+    await connection("entries_tags").delete().where("entry_id", id);
     if (tags && tags.length) {
       await connection
         .insert(tags.map((tag) => ({ tag })))
@@ -73,17 +70,26 @@ const httpTrigger: AzureFunction = async function (
       fields.push("created");
       body.created = body.last_edited;
       body.id = await getId(body.title);
-      entry = await connection("entries").insert(fieldsData(fields, body));
+      await connection("entries").insert(fieldsData(fields, body));
+      entry = await connection("entries")
+        .select("*")
+        .where("id", body.id)
+        .first();
       break;
     case "PUT":
       fields.push("id");
       body.id = context.bindingData.id;
-      entry = await connection("entries")
+      await connection("entries")
         .update(fieldsData(fields, body))
         .where("id", context.bindingData.id);
+      entry = await connection("entries")
+        .select("*")
+        .where("id", body.id)
+        .first();
       break;
     case "DELETE":
-      connection("entries").where("id", context.bindingData.id).delete();
+      body.id = context.bindingData.id;
+      await connection("entries").delete().where("id", context.bindingData.id);
       break;
     default:
       entry = await connection
@@ -93,16 +99,15 @@ const httpTrigger: AzureFunction = async function (
         .first();
   }
   const sendResponse = async (entry) => {
-    await processEntry(req, {
+    const processedEntry = await processEntry(req, {
       id: req.method === "PUT" ? body.newId : body.id,
       ...entry,
-    }).then((processedEntry) => {
-      jsonReply(context, processedEntry);
     });
+    jsonReply(context, processedEntry);
   };
   if (req.method !== "GET") {
-    await syncTags(connection, body.id, body.tags);
-    sendResponse({ id: req.method === "PUT" ? body.newId : body.id });
+    await syncTags(connection, body.id, body.tags ? body.tags : []);
+    await sendResponse({ id: req.method === "PUT" ? body.newId : body.id });
   } else {
     await sendResponse(entry);
   }
