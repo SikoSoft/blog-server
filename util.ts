@@ -5,6 +5,7 @@ import spec = require("blog-spec");
 import { Context, HttpRequest } from "@azure/functions";
 import { BlogEntry } from "./interfaces/BlogEntry";
 import { stringify } from "query-string";
+import { BlogLink } from "./interfaces/BlogLink";
 
 const initialState = {
   session: {},
@@ -32,7 +33,7 @@ function baseUrl(req): string {
     .join("/")}`;
 }
 
-function getEndpoint(endpoint, req) {
+function getEndpoint(endpoint: BlogLink, req: HttpRequest): BlogLink {
   return {
     href: `${baseUrl(req)}/${endpoint.href}`,
     method: endpoint.method,
