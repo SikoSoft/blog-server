@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-import { getConnection, jsonReply, getEndpoint } from "../util.js";
+import { getConnection, jsonReply, getLinks } from "../util.js";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -15,15 +15,7 @@ const httpTrigger: AzureFunction = async function (
     context,
     rights.map((right) => ({
       ...right,
-      links: {
-        delete: getEndpoint(
-          {
-            href: `roleRight/${right.role}/${right.action}`,
-            method: "DELETE",
-          },
-          req
-        ),
-      },
+      links: getLinks(req, "roleRight", [right.role, right.action]),
     }))
   );
 };

@@ -6,6 +6,7 @@ import { Context, HttpRequest } from "@azure/functions";
 import { BlogEntry } from "./interfaces/BlogEntry";
 import { stringify } from "query-string";
 import { BlogLink } from "./interfaces/BlogLink";
+import linkMap from "./linkMap";
 
 const initialState = {
   session: {},
@@ -33,12 +34,44 @@ function baseUrl(req): string {
     .join("/")}`;
 }
 
-function getEndpoint(endpoint: BlogLink, req: HttpRequest): BlogLink {
+function getEndpoint(req: HttpRequest, endpoint: BlogLink): BlogLink {
   return {
+    entity: endpoint.entity,
     href: `${baseUrl(req)}/${endpoint.href}`,
     method: endpoint.method,
     key: req.headers.key ? req.headers.key : "",
   };
+}
+
+function getLinks(
+  req: HttpRequest,
+  entities: string | string[],
+  id?: any | any[]
+): Array<BlogLink> {
+  return [...(typeof entities === "string" ? [entities] : entities)]
+    .map((entity) => {
+      const links = [];
+      if (linkMap[entity]) {
+        const methods = id
+          ? linkMap[entity].filter((method) => method !== "POST")
+          : linkMap[entity].filter(
+              (method) => method === "POST" || method === "GET"
+            );
+        for (const method of methods) {
+          links.push(
+            getEndpoint(req, {
+              entity,
+              href: `${entity}${
+                id ? "/" + (typeof id === "string" ? [id] : id).join("/") : ""
+              }`,
+              method,
+            })
+          );
+        }
+      }
+      return links;
+    })
+    .reduce((prev, cur) => [...prev, ...cur], []);
 }
 
 function sanitizeTitle(title: string): string {
@@ -274,13 +307,13 @@ const processEntry = async (
   return new Promise(async (resolve, reject) => {
     try {
       const tags = await getEntriesTags();
-      const endpoint = `entry/${entry.id}`;
       const furtherReading = await getFurtherReading(entry.id);
-      const rights = await getSessionRights(req.headers["sess-token"]);
       resolve({
         ...entry,
         furtherReading,
         tags: tags[entry.id] ? tags[entry.id] : [],
+        links: getLinks(req, ["entry", "comment"], entry.id),
+        /*
         links: {
           view: getEndpoint({ href: endpoint, method: "GET" }, req),
           ...(rights.includes("update_entry")
@@ -333,6 +366,7 @@ const processEntry = async (
             req
           ),
         },
+*/
       });
     } catch (error) {
       reject(error);
@@ -412,6 +446,7 @@ export {
   baseUrl,
   shortDate,
   getEndpoint,
+  getLinks,
   getSettings,
   getTagRoles,
   getRoleRights,

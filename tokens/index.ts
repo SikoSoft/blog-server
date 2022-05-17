@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-const { getConnection, jsonReply, getEndpoint } = require("../util.js");
+const { getConnection, jsonReply, getLinks } = require("../util.js");
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -11,22 +11,11 @@ const httpTrigger: AzureFunction = async function (
   if (tokens.length) {
     tokens = tokens.map((token) => ({
       ...token,
-      links: {
-        update: getEndpoint(
-          { href: `token/${token.code}`, method: "PUT" },
-          req
-        ),
-        delete: getEndpoint(
-          { href: `token/${token.code}`, method: "DELETE" },
-          req
-        ),
-      },
+      links: getLinks(req, "token", token.code),
     }));
   }
   jsonReply(context, {
-    links: {
-      create: getEndpoint({ href: "token", method: "POST" }, req),
-    },
+    links: getLinks(req, "token"),
     tokens,
   });
 };

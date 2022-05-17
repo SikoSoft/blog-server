@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { getConnection, jsonReply, flushState, getEndpoint } from "../util";
+import { getConnection, jsonReply, flushState, getLinks } from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -15,15 +15,10 @@ const httpTrigger: AzureFunction = async function (
     const right = {
       role: context.bindingData.role,
       action: context.bindingData.action,
-      links: {
-        delete: getEndpoint(
-          {
-            href: `roleRight/${context.bindingData.role}/${context.bindingData.action}`,
-            method: "DELETE",
-          },
-          req
-        ),
-      },
+      links: getLinks(req, "roleRight", [
+        context.bindingData.role,
+        context.bindingData.action,
+      ]),
     };
     jsonReply(context, { right, success: true });
   } else if (req.method === "DELETE") {

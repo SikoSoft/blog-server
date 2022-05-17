@@ -1,17 +1,14 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 
-import { getConnection, jsonReply, getEndpoint } from "../util";
+import { getConnection, jsonReply, getLinks } from "../util";
 
 const getToken = async (connection, req: HttpRequest, code: string) => {
   const [token] = await connection
     .select("*")
     .from("tokens")
     .where("code", code);
-  token.links = {
-    update: getEndpoint({ href: `token/${code}`, method: "PUT" }, req),
-    delete: getEndpoint({ href: `token/${code}`, method: "DELETE" }, req),
-  };
+  token.links = getLinks(req, "token", code);
   return token;
 };
 

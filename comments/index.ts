@@ -1,11 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-import {
-  getConnection,
-  getSessionRights,
-  jsonReply,
-  getEndpoint,
-} from "../util";
+import { getConnection, getSessionRights, jsonReply, getLinks } from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -24,24 +19,7 @@ const httpTrigger: AzureFunction = async function (
       .filter((comment) => comment.public === 1 || canViewUnpublished)
       .map((comment) => ({
         ...comment,
-        links: {
-          ...(rights.includes("delete_comment")
-            ? {
-                delete: getEndpoint(
-                  { href: "deleteComments", method: "POST" },
-                  req
-                ),
-              }
-            : {}),
-          ...(rights.includes("publish_comment")
-            ? {
-                publish: getEndpoint(
-                  { href: "publishComment", method: "POST" },
-                  req
-                ),
-              }
-            : {}),
-        },
+        links: getLinks(req, "comment", comment.id),
       })),
   });
 };

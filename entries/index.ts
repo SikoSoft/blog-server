@@ -43,7 +43,6 @@ const httpTrigger: AzureFunction = async function (
       end: rawEntries[rawEntries.length - 1].id === lastEntryId,
     });
   } else {
-    console.log("ahhhh shit");
     jsonReply(context, {
       [drafts ? "drafts" : "entries"]: [],
       end: true,

@@ -2,7 +2,7 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
 import {
   getConnection,
-  getEndpoint,
+  getLinks,
   getSettings,
   getSessionRole,
   getSessionRights,
@@ -14,6 +14,8 @@ const httpTrigger: AzureFunction = async function (
   req: HttpRequest
 ): Promise<void> {
   const rights = await getSessionRights(req.headers["sess-token"]);
+  const links = getLinks(req, "entries");
+  /*
   const links = {};
   [
     ["getEntry", "entry/{id}", "GET"],
@@ -68,6 +70,7 @@ const httpTrigger: AzureFunction = async function (
       req
     );
   });
+  */
   const settings = await getSettings();
 
   const sessionRole = await getSessionRole(req.headers["sess-token"]);
