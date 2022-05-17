@@ -74,7 +74,7 @@ const httpTrigger: AzureFunction = async function (
     );
     const qRes = await connection("comments").insert(data);
     const comment = {
-      id: qRes,
+      id: qRes[0],
       entry_id: body.entry_id,
       name: body.name,
       message: body.message,
