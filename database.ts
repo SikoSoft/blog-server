@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { Knex, knex } from "knex";
 
-let connection: Promise<Knex>;
+let connection: Knex<any>;
 
 const connectionObject = {
   host: process.env.DB_HOST,
@@ -11,12 +11,12 @@ const connectionObject = {
   database: process.env.DB_NAME,
 };
 
-export async function getConnection(): Promise<Knex<any, any[]>> {
-  return (
-    connection ||
-    knex({
+export async function getConnection(): Promise<Knex> {
+  if (!connection) {
+    connection = knex({
       client: "mysql",
       connection: connectionObject,
-    })
-  );
+    });
+  }
+  return connection;
 }
