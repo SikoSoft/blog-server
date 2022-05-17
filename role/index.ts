@@ -8,13 +8,11 @@ const httpTrigger: AzureFunction = async function (
 ): Promise<any> {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
-
   const connection = await getConnection();
   if (req.method === "POST") {
-    const res = await connection("roles").insert("name", body.name).first();
-
+    const res = await connection("roles").insert({ name: body.name });
     flushState("roles");
-    jsonReply(context, { id: res.id, success: true });
+    jsonReply(context, { id: res[0], success: true });
   } else if (req.method === "PUT") {
     await connection("roles")
       .update("name", body.name)
