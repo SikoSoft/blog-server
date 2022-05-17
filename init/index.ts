@@ -1,6 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-
 import {
   getConnection,
   getEndpoint,
@@ -10,8 +9,11 @@ import {
   jsonReply,
 } from "../util";
 
-const httpTrigger: AzureFunction = async function(context: Context, req: HttpRequest): Promise<void> {
-const rights = await getSessionRights(req.headers["sess-token"]);
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+): Promise<void> {
+  const rights = await getSessionRights(req.headers["sess-token"]);
   const links = {};
   [
     ["getEntry", "entry/{id}", "GET"],
@@ -45,6 +47,9 @@ const rights = await getSessionRights(req.headers["sess-token"]);
     ["updateRole", "role/{role}", "PUT"],
     ["deleteRole", "role/{role}", "DELETE"],
     ["getTokens", "tokens", "GET"],
+    rights.includes("manage_images")
+      ? ["getImageSizes", "imageSizes", "GET"]
+      : [],
     rights.includes("manage_images")
       ? ["addImageSize", "imageSize", "POST"]
       : [],
