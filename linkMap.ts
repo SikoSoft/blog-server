@@ -1,10 +1,12 @@
 export default {
   comment: ["PUT", "POST", "DELETE"],
+  comments: ["GET"],
   draft: ["GET"],
   drafts: ["GET"],
   entries: ["GET"],
   entry: ["GET", "PUT", "POST", "DELETE"],
   filter: ["GET", "PUT", "POST", "DELETE"],
+  filters: ["GET"],
   filterOrder: ["PUT"],
   imageSize: ["PUT", "POST", "DELETE"],
   imageSizes: ["GET"],

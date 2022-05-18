@@ -13,5 +13,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/getFilters/index.js"
+  "scriptFile": "../dist/filters/index.js"
 }

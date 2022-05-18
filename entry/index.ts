@@ -103,7 +103,7 @@ const httpTrigger: AzureFunction = async function (
       id: req.method === "PUT" ? body.newId : body.id,
       ...entry,
     });
-    jsonReply(context, processedEntry);
+    jsonReply(context, { entry: processedEntry });
   };
   if (req.method !== "GET") {
     await syncTags(connection, body.id, body.tags ? body.tags : []);

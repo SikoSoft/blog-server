@@ -7,7 +7,7 @@ const httpTrigger: AzureFunction = async function (
 ): Promise<any> {
   const connection = await getConnection();
   const filters = await connection.select("*").from("filters").orderBy("order");
-  jsonReply(context, filters);
+  jsonReply(context, { filters });
 };
 
 export default httpTrigger;
