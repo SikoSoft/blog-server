@@ -36,6 +36,7 @@ function baseUrl(req): string {
 
 function getEndpoint(req: HttpRequest, endpoint: BlogLink): BlogLink {
   return {
+    rel: endpoint.rel,
     entity: endpoint.entity,
     href: `${baseUrl(req)}/${endpoint.href}`,
     method: endpoint.method,
@@ -46,7 +47,8 @@ function getEndpoint(req: HttpRequest, endpoint: BlogLink): BlogLink {
 function getLinks(
   req: HttpRequest,
   entities: string | string[],
-  id?: any | any[]
+  id?: any | any[],
+  rel?: string
 ): Array<BlogLink> {
   return [...(typeof entities === "string" ? [entities] : entities)]
     .map((entity) => {
@@ -62,9 +64,10 @@ function getLinks(
             getEndpoint(req, {
               entity,
               href: `${entity}${
-                id ? "/" + (typeof id === "string" ? [id] : id).join("/") : ""
+                id ? "/" + (typeof id !== "object" ? [id] : id).join("/") : ""
               }`,
               method,
+              rel,
             })
           );
         }

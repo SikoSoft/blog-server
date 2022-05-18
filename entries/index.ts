@@ -6,6 +6,7 @@ const {
   processEntry,
   getLastEntry,
   jsonReply,
+  getLinks,
   getExcludedEntries,
 } = require("../util");
 
@@ -15,6 +16,10 @@ const httpTrigger: AzureFunction = async function (
   drafts: boolean = false
 ): Promise<any> {
   context.log("inside entries...");
+  const type = drafts ? "drafts" : "entries";
+  const offset = context.bindingData.start
+    ? parseInt(context.bindingData.start)
+    : 0;
   const settings = await getSettings();
   const connection = await getConnection();
   const excludedEntries = await getExcludedEntries(req.headers["sess-token"]);
@@ -27,7 +32,7 @@ const httpTrigger: AzureFunction = async function (
   const rawEntries = await query
     .clone()
     .orderBy("created", "desc")
-    .offset(context.bindingData.start ? parseInt(context.bindingData.start) : 0)
+    .offset(offset)
     .limit(settings.per_load ? settings.per_load : 10);
   if (rawEntries.length) {
     const processedEntries = rawEntries.map((entry) =>
@@ -38,13 +43,17 @@ const httpTrigger: AzureFunction = async function (
     await processedEntries.forEach(async (entry) => {
       await entry.then((data) => entries.push(data));
     });
+    const end = rawEntries[rawEntries.length - 1].id === lastEntryId;
     jsonReply(context, {
       [drafts ? "drafts" : "entries"]: entries,
-      end: rawEntries[rawEntries.length - 1].id === lastEntryId,
+      end,
+      links: !end
+        ? getLinks(req, type, offset + settings.per_load, "more")
+        : [],
     });
   } else {
     jsonReply(context, {
-      [drafts ? "drafts" : "entries"]: [],
+      [type]: [],
       end: true,
     });
   }
