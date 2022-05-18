@@ -77,6 +77,20 @@ function getLinks(
     .reduce((prev, cur) => [...prev, ...cur], []);
 }
 
+function contextIsValid(id: string): boolean {
+  return spec.contexts.filter((context) => id === context.id).length > 0;
+}
+
+function getContextLinks(req: HttpRequest): Array<BlogLink> {
+  const context = req.headers.context ? JSON.parse(req.headers.context) : [];
+  return context
+    .filter((context) => contextIsValid(context.id))
+    .map((context) =>
+      getLinks(req, context.props[0], context.props[1], context.id)
+    )
+    .reduce((prev, cur) => [...prev, ...cur], []);
+}
+
 function sanitizeTitle(title: string): string {
   return title
     .toLowerCase()
@@ -315,7 +329,7 @@ const processEntry = async (
         ...entry,
         furtherReading,
         tags: tags[entry.id] ? tags[entry.id] : [],
-        links: getLinks(req, ["entry", "comment"], entry.id),
+        links: getLinks(req, ["entry", "comment", "comments"], entry.id),
         /*
         links: {
           view: getEndpoint({ href: endpoint, method: "GET" }, req),
@@ -450,6 +464,7 @@ export {
   shortDate,
   getEndpoint,
   getLinks,
+  getContextLinks,
   getSettings,
   getTagRoles,
   getRoleRights,
