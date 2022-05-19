@@ -50,22 +50,28 @@ function getLinks(
   id?: any | any[],
   rel?: string
 ): Array<BlogLink> {
+  const ids = typeof id !== "object" ? [id] : id;
   return [...(typeof entities === "string" ? [entities] : entities)]
     .map((entity) => {
       const links = [];
       if (linkMap[entity]) {
-        const methods = id
-          ? linkMap[entity].filter((method) => method !== "POST")
-          : linkMap[entity].filter(
-              (method) => method === "POST" || method === "GET"
-            );
+        const entityParams = linkMap[entity].params || [];
+        let methods = linkMap[entity].methods;
+        if (
+          ids.length &&
+          (entityParams[entityParams.length - 1] === entity || false)
+        ) {
+          methods = methods.filter((method) => method !== "POST");
+        } else {
+          methods = methods.filter(
+            (method) => method === "POST" || method === "GET"
+          );
+        }
         for (const method of methods) {
           links.push(
             getEndpoint(req, {
               entity,
-              href: `${entity}${
-                id ? "/" + (typeof id !== "object" ? [id] : id).join("/") : ""
-              }`,
+              href: `${entity}${id ? "/" + ids.join("/") : ""}`,
               method,
               rel,
             })
