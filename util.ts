@@ -100,6 +100,7 @@ function contextIsValid(id: string): boolean {
 
 function getContextLinks(req: HttpRequest): Array<BlogLink> {
   const context = req.headers.context ? JSON.parse(req.headers.context) : [];
+  console.log("REQUEST HEADERS", req.headers.context);
   return context
     .filter((context) => contextIsValid(context.id))
     .map((context) =>

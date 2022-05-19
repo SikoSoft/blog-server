@@ -46,6 +46,9 @@ export default {
   setting: {
     methods: ["PUT"],
   },
+  settings: {
+    methods: ["GET"],
+  },
   tagRole: {
     methods: ["POST", "DELETE"],
   },

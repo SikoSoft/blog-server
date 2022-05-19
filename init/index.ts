@@ -16,7 +16,7 @@ const httpTrigger: AzureFunction = async function (
 ): Promise<void> {
   const rights = await getSessionRights(req.headers["sess-token"]);
   const links = [
-    ...getLinks(req, ["drafts", "entries", "filters"]),
+    ...getLinks(req, ["drafts", "entries", "filters", "entry"]),
     ...getContextLinks(req),
   ];
   /*
