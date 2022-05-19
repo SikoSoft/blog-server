@@ -9,13 +9,14 @@ const httpTrigger: AzureFunction = async function (
 ) {
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
-
   const connection = await getConnection();
-  const setting = spec.settings.filter((setting) => setting.id === body.id)[0];
+  const setting = spec.settings.filter(
+    (setting) => setting.id === context.bindingData.id
+  )[0];
   const field =
     spec.typeMap[setting.dataType ? setting.dataType : setting.type];
   const qRes = await connection("settings")
-    .insert({ id: body.id, [field]: body.value })
+    .insert({ id: context.bindingData.id, [field]: body.value })
     .onConflict("id")
     .merge();
   const success = qRes.length >= 1 ? true : false;
