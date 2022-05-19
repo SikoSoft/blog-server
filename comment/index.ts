@@ -53,7 +53,6 @@ const addComment = async (
   connection: Knex<any>,
   body: any
 ): Promise<any> => {
-  console.log("addComment");
   const captchaResponse = await verifyCaptcha(body.captchaToken, getIp(req));
 
   if (captchaResponse.success) {

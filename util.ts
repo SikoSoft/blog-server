@@ -58,16 +58,6 @@ function getLinks(
       if (linkMap[entity]) {
         const entityParams = linkMap[entity].params || [];
         let methods = linkMap[entity].methods;
-        console.log(
-          "ids",
-          ids,
-          "idsLength",
-          ids.length,
-          "entityParams",
-          entityParams,
-          "lastParam",
-          entityParams[entityParams.length - 1]
-        );
         if (
           ids.length &&
           (entityParams[entityParams.length - 1] === entity || false)
@@ -100,7 +90,6 @@ function contextIsValid(id: string): boolean {
 
 function getContextLinks(req: HttpRequest): Array<BlogLink> {
   const context = req.headers.context ? JSON.parse(req.headers.context) : [];
-  console.log("REQUEST HEADERS", req.headers.context);
   return context
     .filter((context) => contextIsValid(context.id))
     .map((context) =>
