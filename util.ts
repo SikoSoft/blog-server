@@ -122,7 +122,7 @@ async function getSettings() {
         );
         settings[setting.id] = matchedRow.length
           ? matchedRow[0][
-              spec.typeMap[setting.dataType ? setting.dataType : setting.type]
+              setting.dataType ? setting.dataType : spec.typeMap[setting.type]
             ]
           : setting.default;
       }
