@@ -45,6 +45,7 @@ export default {
   },
   setting: {
     methods: ["PUT"],
+    params: ["setting"],
   },
   settings: {
     methods: ["GET"],
