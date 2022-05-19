@@ -1,6 +1,7 @@
 export default {
   comment: {
     methods: ["PUT", "POST", "DELETE"],
+    params: ["comment"],
   },
   comments: {
     methods: ["GET"],

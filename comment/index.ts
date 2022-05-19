@@ -11,6 +11,7 @@ import { errorCodes } from "blog-spec";
 import { parse } from "query-string";
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { SentimentAnalysisResponse } from "../interfaces/SentimentAnalysisResponse";
+import { Knex } from "knex";
 
 const getSentimentScore = async (text: string): Promise<any> => {
   if (
@@ -45,21 +46,22 @@ const getSentimentScore = async (text: string): Promise<any> => {
   });
 };
 
-const httpTrigger: AzureFunction = async function (
+const addComment = async (
   context: Context,
-  req: HttpRequest
-): Promise<any> {
-  const body =
-    typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
+  req: HttpRequest,
+  connection: Knex<any>,
+  body: any
+): Promise<any> => {
+  console.log("addComment");
   const captchaResponse = await verifyCaptcha(body.captchaToken, getIp(req));
 
   if (captchaResponse.success) {
     body.message = JSON.stringify(body.message);
-    body.entry_id = context.bindingData.id;
+    body.entry_id = body.entryId;
     body.time = Math.ceil(new Date().getTime() / 1000);
     const fields = ["entry_id", "name", "message", "time"];
     const values = fields.map((field) => body[field]);
-    const connection = await getConnection();
+
     const score = await getSentimentScore(
       getTextFromDelta(JSON.parse(body.message))
     );
@@ -81,11 +83,13 @@ const httpTrigger: AzureFunction = async function (
       time: body.time,
     };
     if (score) {
-      await connection("comments_scores").insert({ comment_id: qRes, score });
-
-      jsonReply(context, { ...comment, score });
+      await connection("comments_scores").insert({
+        comment_id: qRes,
+        score,
+      });
+      jsonReply(context, { comment, score });
     } else {
-      jsonReply(context, comment);
+      jsonReply(context, { comment });
     }
   } else {
     jsonReply(
@@ -95,6 +99,48 @@ const httpTrigger: AzureFunction = async function (
       },
       500
     );
+  }
+};
+
+const updateComment = async (
+  context: Context,
+  connection: Knex<any>,
+  body: any
+): Promise<any> => {
+  const result = await connection("comments")
+    .update(body)
+    .where("id", context.bindingData.id);
+  jsonReply(context, { result });
+};
+
+const deleteComment = async (
+  context: Context,
+  connection: Knex<any>
+): Promise<any> => {
+  const result = await connection("comments")
+    .delete()
+    .where("id", context.bindingData.id);
+  jsonReply(context, { result });
+};
+
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+): Promise<any> {
+  const body =
+    typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
+
+  const connection = await getConnection();
+  switch (req.method) {
+    case "POST":
+      await addComment(context, req, connection, body);
+      break;
+    case "PUT":
+      await updateComment(context, connection, body);
+      break;
+    case "DELETE":
+      await deleteComment(context, connection);
+      break;
   }
 };
 

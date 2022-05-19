@@ -50,13 +50,24 @@ function getLinks(
   id?: any | any[],
   rel?: string
 ): Array<BlogLink> {
-  const ids = typeof id !== "object" ? [id] : id;
+  const ids =
+    typeof id === "undefined" ? [] : typeof id !== "object" ? [id] : id;
   return [...(typeof entities === "string" ? [entities] : entities)]
     .map((entity) => {
       const links = [];
       if (linkMap[entity]) {
         const entityParams = linkMap[entity].params || [];
         let methods = linkMap[entity].methods;
+        console.log(
+          "ids",
+          ids,
+          "idsLength",
+          ids.length,
+          "entityParams",
+          entityParams,
+          "lastParam",
+          entityParams[entityParams.length - 1]
+        );
         if (
           ids.length &&
           (entityParams[entityParams.length - 1] === entity || false)
@@ -92,7 +103,9 @@ function getContextLinks(req: HttpRequest): Array<BlogLink> {
   return context
     .filter((context) => contextIsValid(context.id))
     .map((context) =>
-      getLinks(req, context.props[0], context.props[1], context.id)
+      context?.props?.length
+        ? getLinks(req, context.props[0], context.props[1], context.id)
+        : []
     )
     .reduce((prev, cur) => [...prev, ...cur], []);
 }
@@ -335,7 +348,10 @@ const processEntry = async (
         ...entry,
         furtherReading,
         tags: tags[entry.id] ? tags[entry.id] : [],
-        links: getLinks(req, ["entry", "comment", "comments"], entry.id),
+        links: [
+          ...getLinks(req, ["entry", "comments"], entry.id),
+          ...getLinks(req, ["comment"]),
+        ],
         /*
         links: {
           view: getEndpoint({ href: endpoint, method: "GET" }, req),
