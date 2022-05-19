@@ -6,6 +6,7 @@ import {
   getIp,
   jsonReply,
   getTextFromDelta,
+  getLinks,
 } from "../util";
 import { errorCodes } from "blog-spec";
 import { parse } from "query-string";
@@ -81,6 +82,7 @@ const addComment = async (
       name: body.name,
       message: body.message,
       time: body.time,
+      links: getLinks(req, "comment", qRes[0]),
     };
     if (score) {
       await connection("comments_scores").insert({
