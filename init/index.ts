@@ -1,7 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
 import {
-  getConnection,
+  getRoles,
   getLinks,
   getContextLinks,
   getSettings,
@@ -25,12 +25,7 @@ const httpTrigger: AzureFunction = async function (
     role: sessionRole ? sessionRole : settings.role_guest,
     rights,
   };
-  const connection = await getConnection();
-  const qRes = await connection.select("*").from("roles");
-  const roles = qRes.map((row) => ({
-    id: row.id,
-    name: row.name,
-  }));
+  const roles = await getRoles();
   jsonReply(context, {
     user,
     roles,

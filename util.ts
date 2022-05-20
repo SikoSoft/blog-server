@@ -9,6 +9,7 @@ import { BlogLink } from "./interfaces/BlogLink";
 import linkMap from "./linkMap";
 
 const initialState = {
+  roles: [],
   session: {},
   excludedEntries: {},
 };
@@ -470,6 +471,20 @@ const getId = async (title: string): Promise<string> => {
   });
 };
 
+const getRoles = async () => {
+  if (state.roles.length) {
+    return state.roles;
+  }
+  const connection = await getConnection();
+  const qRes = await connection.select("*").from("roles");
+  const roles = qRes.map((row) => ({
+    id: row.id,
+    name: row.name,
+  }));
+  state.roles = roles;
+  return state.roles;
+};
+
 export {
   getConnection,
   baseUrl,
@@ -492,4 +507,5 @@ export {
   verifyCaptcha,
   flushState,
   getTextFromDelta,
+  getRoles,
 };
