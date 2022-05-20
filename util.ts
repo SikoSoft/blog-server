@@ -59,14 +59,17 @@ function getLinks(
       if (linkMap[entity]) {
         const entityParams = linkMap[entity].params || [];
         let methods = linkMap[entity].methods;
-        const isUpdatingEntity =
+        const isReferencingEntity =
           ids.length - 1 === entityParams.indexOf(entity);
-        if (isUpdatingEntity) {
+        const needsIdToGet =
+          (entityParams.length &&
+            entityParams[entityParams.length - 1] === entity) ||
+          false;
+        if (isReferencingEntity) {
           methods = methods.filter((method) => method !== "POST");
-        } else {
-          methods = methods.filter(
-            (method) => method === "POST" || method === "GET"
-          );
+        }
+        if (needsIdToGet && !isReferencingEntity) {
+          methods = methods.filter((method) => method !== "GET");
         }
         for (const method of methods) {
           links.push(
@@ -342,60 +345,6 @@ const processEntry = async (
           ...getLinks(req, ["entry", "comments"], entry.id),
           ...getLinks(req, ["comment"]),
         ],
-        /*
-        links: {
-          view: getEndpoint({ href: endpoint, method: "GET" }, req),
-          ...(rights.includes("update_entry")
-            ? { save: getEndpoint({ href: endpoint, method: "PUT" }, req) }
-            : {}),
-          ...(rights.includes("delete_entry")
-            ? { delete: getEndpoint({ href: endpoint, method: "DELETE" }, req) }
-            : {}),
-          postComment: getEndpoint(
-            {
-              href: `postComment/${entry.id}`,
-              method: "POST",
-            },
-            req
-          ),
-          getComments: getEndpoint(
-            {
-              href: `comments/${entry.id}`,
-              method: "GET",
-            },
-            req
-          ),
-          ...(rights.includes("publish_comment")
-            ? {
-                publishComments: getEndpoint(
-                  {
-                    href: "publishComments",
-                    method: "POST",
-                  },
-                  req
-                ),
-              }
-            : {}),
-          ...(rights.includes("delete_comment")
-            ? {
-                deleteComments: getEndpoint(
-                  {
-                    href: "deleteComments",
-                    method: "POST",
-                  },
-                  req
-                ),
-              }
-            : {}),
-          uploadImage: getEndpoint(
-            {
-              href: "uploadImage/{type}",
-              method: "POST",
-            },
-            req
-          ),
-        },
-*/
       });
     } catch (error) {
       reject(error);
