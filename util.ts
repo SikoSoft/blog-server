@@ -59,10 +59,9 @@ function getLinks(
       if (linkMap[entity]) {
         const entityParams = linkMap[entity].params || [];
         let methods = linkMap[entity].methods;
-        if (
-          ids.length &&
-          (entityParams[entityParams.length - 1] === entity || false)
-        ) {
+        const isUpdatingEntity =
+          ids.length - 1 === entityParams.indexOf(entity);
+        if (isUpdatingEntity) {
           methods = methods.filter((method) => method !== "POST");
         } else {
           methods = methods.filter(
@@ -471,7 +470,7 @@ const getId = async (title: string): Promise<string> => {
   });
 };
 
-const getRoles = async () => {
+const getRoles = async (): Promise<[]> => {
   if (state.roles.length) {
     return state.roles;
   }

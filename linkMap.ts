@@ -18,6 +18,7 @@ export default {
   },
   entry: {
     methods: ["GET", "PUT", "POST", "DELETE"],
+    params: ["entry"],
   },
   filter: {
     methods: ["GET", "PUT", "POST", "DELETE"],
@@ -39,6 +40,7 @@ export default {
   },
   roleRight: {
     methods: ["POST", "DELETE"],
+    params: ["role", "roleRight"],
   },
   roleRights: {
     methods: ["GET"],
@@ -52,12 +54,14 @@ export default {
   },
   tagRole: {
     methods: ["POST", "DELETE"],
+    params: ["tag", "tagRole"],
   },
   tagRoles: {
     methods: ["GET"],
   },
   tags: {
     methods: ["GET"],
+    params: ["tags"],
   },
   token: {
     methods: ["PUT", "POST", "DELETE"],

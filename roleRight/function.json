@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["post", "delete"],
-      "route": "roleRight/{role}/{action}"
+      "route": "roleRight/{role}/{action?}"
     },
     {
       "type": "http",

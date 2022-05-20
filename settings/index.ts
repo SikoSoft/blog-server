@@ -5,7 +5,6 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  console.log(await getSettings());
   const settings = Object.entries(await getSettings()).map(([id, value]) => ({
     id,
     value,
