@@ -15,7 +15,9 @@ import { SentimentAnalysisResponse } from "../interfaces/SentimentAnalysisRespon
 import { Knex } from "knex";
 
 const getSentimentScore = async (text: string): Promise<any> => {
+  const settings = await getSettings();
   if (
+    !settings.analyze_comments_sentiment ||
     !process.env.AZURE_SENTIMENT_ENDPOINT ||
     !process.env.AZURE_COGNITIVE_SERVICES_KEY
   ) {
@@ -43,7 +45,7 @@ const getSentimentScore = async (text: string): Promise<any> => {
     if (response && response.data.documents && response.data.documents.length) {
       resolve(response.data.documents[0].score);
     }
-    resolve(false);
+    resolve(0);
   });
 };
 
@@ -53,19 +55,26 @@ const addComment = async (
   connection: Knex<any>,
   body: any
 ): Promise<any> => {
-  const captchaResponse = await verifyCaptcha(body.captchaToken, getIp(req));
+  const settings = await getSettings();
+  let captchaCompliant = true;
+  if (settings.use_captcha) {
+    captchaCompliant = await verifyCaptcha(body.captchaToken, getIp(req));
+  }
 
-  if (captchaResponse.success) {
+  if (captchaCompliant) {
     body.message = JSON.stringify(body.message);
     body.entry_id = body.entryId;
     body.time = Math.ceil(new Date().getTime() / 1000);
     const fields = ["entry_id", "name", "message", "time"];
     const values = fields.map((field) => body[field]);
 
-    const score = await getSentimentScore(
-      getTextFromDelta(JSON.parse(body.message))
-    );
-    const settings = await getSettings();
+    let score = 0;
+    if (settings.analyze_comments_sentiment) {
+      score = await getSentimentScore(
+        getTextFromDelta(JSON.parse(body.message))
+      );
+    }
+
     if (score && settings.min_score_auto_publish) {
       fields.push("public");
       values.push(score >= settings.min_score_auto_publish ? 1 : 0);
