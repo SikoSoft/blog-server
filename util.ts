@@ -378,7 +378,7 @@ const verifyCaptcha = async (response, ip: string): Promise<any> => {
         }
       )
       .then((response) => {
-        resolve(response.data);
+        resolve(response.data.success);
       })
       .catch((e) => {
         reject(e);

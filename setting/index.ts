@@ -13,8 +13,7 @@ const httpTrigger: AzureFunction = async function (
   const setting = spec.settings.filter(
     (setting) => setting.id === context.bindingData.id
   )[0];
-  const field =
-    spec.typeMap[setting.dataType ? setting.dataType : setting.type];
+  const field = setting.dataType || spec.typeMap[setting.type];
   const qRes = await connection("settings")
     .insert({ id: context.bindingData.id, [field]: body.value })
     .onConflict("id")

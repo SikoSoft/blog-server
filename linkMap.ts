@@ -1,4 +1,7 @@
 export default {
+  contextLinks: {
+    methods: ["GET"],
+  },
   comment: {
     methods: ["PUT", "POST", "DELETE"],
     params: ["comment"],
@@ -61,10 +64,10 @@ export default {
   },
   tags: {
     methods: ["GET"],
-    params: ["tags"],
   },
   token: {
     methods: ["PUT", "POST", "DELETE"],
+    params: ["token"],
   },
   tokens: {
     methods: ["GET"],

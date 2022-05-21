@@ -84,7 +84,7 @@ const httpTrigger: AzureFunction = async function (
         .where("id", context.bindingData.id);
       entry = await connection("entries")
         .select("*")
-        .where("id", body.id)
+        .where("id", body.newId)
         .first();
       break;
     case "DELETE":
@@ -92,25 +92,15 @@ const httpTrigger: AzureFunction = async function (
       await connection("entries").delete().where("id", context.bindingData.id);
       break;
     default:
-      entry = await connection
+      entry = await connection("entries")
         .select("*")
-        .from("entries")
         .where("id", context.bindingData.id)
         .first();
   }
-  const sendResponse = async (entry) => {
-    const processedEntry = await processEntry(req, {
-      id: req.method === "PUT" ? body.newId : body.id,
-      ...entry,
-    });
-    jsonReply(context, { entry: processedEntry });
-  };
   if (req.method !== "GET") {
     await syncTags(connection, body.id, body.tags ? body.tags : []);
-    await sendResponse({ id: req.method === "PUT" ? body.newId : body.id });
-  } else {
-    await sendResponse(entry);
   }
+  jsonReply(context, { entry: entry ? await processEntry(req, entry) : {} });
 };
 
 export default httpTrigger;
