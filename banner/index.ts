@@ -9,17 +9,37 @@ const httpTrigger: AzureFunction = async function (
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const connection = await getConnection();
+  let banner;
   switch (req.method) {
     case "POST":
-      console.log("body", body);
       const id = await connection("banners").insert(body);
-      jsonReply(context, {});
+      banner = await connection
+        .select("*")
+        .from("banners")
+        .where("id", id)
+        .first();
+      jsonReply(context, {
+        banner: {
+          ...banner,
+          links: getLinks(req, "banner", id),
+        },
+      });
       break;
     case "PUT":
       await connection("banners")
         .update(body)
         .where("id", context.bindingData.id);
-      jsonReply(context, {});
+      banner = await connection
+        .select("*")
+        .from("banners")
+        .where("id", context.bindingData.id)
+        .first();
+      jsonReply(context, {
+        banner: {
+          ...banner,
+          links: getLinks(req, "banner", context.bindingData.id),
+        },
+      });
       break;
     case "DELETE":
       await connection("banners").delete().where("id", context.bindingData.id);
