@@ -25,6 +25,7 @@ const httpTrigger: AzureFunction = async function (
       "filters",
       "entry",
       "tags",
+      "useToken",
     ]),
     ...getContextLinks(req),
   ];

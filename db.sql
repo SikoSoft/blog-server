@@ -20,6 +20,15 @@ SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 
 
 
+CREATE TABLE `banners` (
+  `id` int(6) NOT NULL AUTO_INCREMENT,
+  `image` longtext DEFAULT NULL,
+  `heading` longtext DEFAULT NULL,
+  `caption` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+
 CREATE TABLE `comments` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `entry_id` varchar(255) NOT NULL,
@@ -28,7 +37,7 @@ CREATE TABLE `comments` (
   `time` int(10) DEFAULT 0,
   `public` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb3 AVG_ROW_LENGTH=1820;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3 AVG_ROW_LENGTH=1820;
 
 
 CREATE TABLE `comments_scores` (
@@ -44,7 +53,7 @@ CREATE TABLE `entries` (
   `body` longtext CHARACTER SET utf8mb3 DEFAULT NULL,
   `created` int(11) DEFAULT 0,
   `last_edited` int(11) DEFAULT 0,
-  `listed` tinyint(1) DEFAULT 1,
+  `listed` int(1) DEFAULT 1,
   `public` tinyint(1) DEFAULT 0,
   `publish_at` int(11) DEFAULT 0,
   `published_at` int(11) DEFAULT 0,
@@ -72,8 +81,16 @@ CREATE TABLE `filters_rules` (
   `filter_id` varchar(64) DEFAULT NULL,
   `type` varchar(32) DEFAULT NULL,
   `value` varchar(255) DEFAULT NULL,
-  `operator` varchar(16) DEFAULT NULL
+  `operator` varchar(16) DEFAULT NULL,
+  UNIQUE KEY `filter_key` (`filter_id`,`type`,`value`,`operator`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+
+CREATE TABLE `image_sizes` (
+  `width` int(6) NOT NULL DEFAULT 0,
+  `height` int(6) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`width`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 CREATE TABLE `roles` (
@@ -81,7 +98,7 @@ CREATE TABLE `roles` (
   `name` varchar(32) NOT NULL,
   `token` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3;
 
 
 CREATE TABLE `roles_rights` (
@@ -135,7 +152,6 @@ CREATE TABLE `tokens_invalid_attempts` (
   `ip` varchar(15) NOT NULL,
   `time` int(10) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
 
 
 

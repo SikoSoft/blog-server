@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Knex, knex } from "knex";
+import setup from "./setup";
 
 let connection: Knex<any>;
 
@@ -11,12 +12,21 @@ const connectionObject = {
   database: process.env.DB_NAME,
 };
 
+const checkForInstallation = async () => {
+  try {
+    await connection.select("*").from("settings");
+  } catch (error) {
+    await setup(connection);
+  }
+};
+
 export async function getConnection(): Promise<Knex> {
   if (!connection) {
     connection = knex({
       client: "mysql",
       connection: connectionObject,
     });
+    await checkForInstallation();
   }
   return connection;
 }
