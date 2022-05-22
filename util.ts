@@ -432,11 +432,10 @@ const getId = async (title: string): Promise<string> => {
       const connection = await getConnection();
       const id = sanitizeTitle(title);
       const qRes = await connection
-        .count("* as total")
+        .select("id")
         .from("entries")
-        .where("id", "REGEXP", `%${id}%`)
-        .first();
-      resolve(qRes.total === 0 ? id : `${id}-${qRes.total + 1}`);
+        .whereRaw("id REGEXP ?", [id]);
+      resolve(qRes.length === 0 ? id : `${id}-${qRes.length + 1}`);
     } catch (error) {
       reject(error);
     }
