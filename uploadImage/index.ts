@@ -40,11 +40,12 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  console.log("uploadImage is being called");
   const boundary = multipart.getBoundary(req.headers["content-type"]);
   const parts = multipart.Parse(req.body, boundary);
   let blobName = getBlobName(parts[0].filename);
-  if (context.bindingData.type && context.bindingData.type === "filter") {
-    blobName = `filter/${parts[0].filename}`;
+  if (context.bindingData.type) {
+    blobName = `${context.bindingData.type}/${parts[0].filename}`;
   }
   const buffer = new Buffer(parts[0].data, "base64");
   const stream = intoStream(buffer);

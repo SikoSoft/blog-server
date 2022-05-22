@@ -5,6 +5,7 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
+  //console.log("get context links", req);
   const links = getContextLinks(req);
   jsonReply(context, { links });
 };

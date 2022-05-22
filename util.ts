@@ -20,6 +20,12 @@ function pad(x: number, padding: number = 2): string {
   return x.toString().padStart(padding, "0");
 }
 
+function arrayUnique(array: any): any {
+  return [...new Set(array.map((element) => JSON.stringify(element)))].map(
+    (element: any) => JSON.parse(element)
+  );
+}
+
 function shortDate(time: Date = new Date()): string {
   const date = new Date(time);
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
@@ -53,39 +59,54 @@ function getLinks(
 ): Array<BlogLink> {
   const ids =
     typeof id === "undefined" ? [] : typeof id !== "object" ? [id] : id;
-  return [...(typeof entities === "string" ? [entities] : entities)]
-    .map((entity) => {
-      const links = [];
-      if (linkMap[entity]) {
-        const entityParams = linkMap[entity].params || [];
-        let methods = linkMap[entity].methods;
-        const isReferencingEntity =
-          ids.length && ids.length - 1 === entityParams.indexOf(entity);
-        const needsIdToGet =
-          (entityParams.length &&
-            entityParams[entityParams.length - 1] === entity) ||
-          false;
-        if (isReferencingEntity) {
-          methods = methods.filter((method) => method !== "POST");
-        }
-        //methods = methods.filter((method) => method === "POST");
-        if (needsIdToGet && !isReferencingEntity) {
-          methods = methods.filter((method) => method !== "GET");
-        }
-        for (const method of methods) {
-          links.push(
-            getEndpoint(req, {
-              entity,
-              href: `${entity}${id ? "/" + ids.join("/") : ""}`,
-              method,
-              rel,
-            })
+  return arrayUnique(
+    [...(typeof entities === "string" ? [entities] : entities)]
+      .map((entity) => {
+        const links = [];
+        if (linkMap[entity]) {
+          const entityParams = linkMap[entity].params || [];
+          let methods = linkMap[entity].methods;
+          const isReferencingEntity =
+            (ids.length && ids.length - 1 === entityParams.indexOf(entity)) ||
+            false;
+          const needsIdToGet =
+            (entityParams.length &&
+              entityParams[entityParams.length - 1] === entity) ||
+            false;
+
+          console.log(
+            "GETLINKS",
+            entity,
+            methods,
+            isReferencingEntity,
+            needsIdToGet,
+            ids.length
           );
+
+          if (isReferencingEntity) {
+            console.log(entity, " is referencing entity, remove POST");
+            methods = methods.filter((method) => method !== "POST");
+          }
+          //methods = methods.filter((method) => method === "POST");
+          if (needsIdToGet && !isReferencingEntity) {
+            console.log(entity, " needs ID and is not referencing entity");
+            methods = methods.filter((method) => method !== "GET");
+          }
+          for (const method of methods) {
+            links.push(
+              getEndpoint(req, {
+                entity,
+                href: `${entity}${id ? "/" + ids.join("/") : ""}`,
+                method,
+                rel,
+              })
+            );
+          }
         }
-      }
-      return links;
-    })
-    .reduce((prev, cur) => [...prev, ...cur], []);
+        return links;
+      })
+      .reduce((prev, cur) => [...prev, ...cur], [])
+  );
 }
 
 function contextIsValid(id: string): boolean {
@@ -94,14 +115,16 @@ function contextIsValid(id: string): boolean {
 
 function getContextLinks(req: HttpRequest): Array<BlogLink> {
   const context = req.headers.context ? JSON.parse(req.headers.context) : [];
-  return context
-    .filter((context) => contextIsValid(context.id))
-    .map((context) =>
-      context?.props?.length
-        ? getLinks(req, context.props[0], context.props[1], context.id)
-        : []
-    )
-    .reduce((prev, cur) => [...prev, ...cur], []);
+  return arrayUnique(
+    context
+      .filter((context) => contextIsValid(context.id))
+      .map((context) =>
+        context?.props?.length
+          ? getLinks(req, context.props[0], context.props[1], context.id)
+          : []
+      )
+      .reduce((prev, cur) => [...prev, ...cur], [])
+  );
 }
 
 function sanitizeTitle(title: string): string {

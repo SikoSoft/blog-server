@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptName": "../dist/uploadImage/index.js"
+  "scriptFile": "../dist/uploadImage/index.js"
 }

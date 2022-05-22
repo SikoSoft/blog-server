@@ -81,6 +81,7 @@ export default {
   },
   uploadImage: {
     methods: ["POST"],
+    params: ["imageType"],
   },
   useToken: {
     methods: ["POST"],
