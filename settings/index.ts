@@ -8,7 +8,7 @@ const httpTrigger: AzureFunction = async function (
   const settings = Object.entries(await getSettings()).map(([id, value]) => ({
     id,
     value,
-    links: getLinks(req, "setting", id),
+    links: [...getLinks(req, "setting", id), ...getLinks(req, "banners")],
   }));
   jsonReply(context, { settings });
 };

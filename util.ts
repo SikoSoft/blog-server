@@ -49,7 +49,7 @@ function getLinks(
   req: HttpRequest,
   entities: string | string[],
   id?: any | any[],
-  rel?: string
+  rel?: any
 ): Array<BlogLink> {
   const ids =
     typeof id === "undefined" ? [] : typeof id !== "object" ? [id] : id;
@@ -60,7 +60,7 @@ function getLinks(
         const entityParams = linkMap[entity].params || [];
         let methods = linkMap[entity].methods;
         const isReferencingEntity =
-          ids.length - 1 === entityParams.indexOf(entity);
+          ids.length && ids.length - 1 === entityParams.indexOf(entity);
         const needsIdToGet =
           (entityParams.length &&
             entityParams[entityParams.length - 1] === entity) ||
@@ -68,6 +68,7 @@ function getLinks(
         if (isReferencingEntity) {
           methods = methods.filter((method) => method !== "POST");
         }
+        //methods = methods.filter((method) => method === "POST");
         if (needsIdToGet && !isReferencingEntity) {
           methods = methods.filter((method) => method !== "GET");
         }

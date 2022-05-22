@@ -1,4 +1,11 @@
 export default {
+  banner: {
+    methods: ["PUT", "POST", "DELETE"],
+    params: ["banner"],
+  },
+  banners: {
+    methods: ["GET"],
+  },
   contextLinks: {
     methods: ["GET"],
   },

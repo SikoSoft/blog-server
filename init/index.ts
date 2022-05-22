@@ -1,6 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
 import {
+  getConnection,
   getRoles,
   getLinks,
   getContextLinks,
@@ -14,6 +15,7 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
+  const connection = await getConnection();
   const rights = await getSessionRights(req.headers["sess-token"]);
   const links = [
     ...getLinks(req, [
@@ -33,10 +35,19 @@ const httpTrigger: AzureFunction = async function (
     rights,
   };
   const roles = await getRoles();
+  let header = {};
+  if (settings.header_banner) {
+    header = await connection
+      .select("*")
+      .from("banners")
+      .where("id", settings.header_banner)
+      .first();
+  }
   jsonReply(context, {
     user,
     roles,
     settings,
+    header,
     links,
   });
 };

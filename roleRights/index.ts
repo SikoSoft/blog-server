@@ -1,4 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { BlogRole } from "../interfaces/BlogRole.js";
 
 import { getConnection, jsonReply, getLinks, getRoles } from "../util.js";
 
@@ -18,7 +19,7 @@ const httpTrigger: AzureFunction = async function (
       links: getLinks(req, "roleRight", [right.role, right.action]),
     })),
     links: roles
-      .map((role) => getLinks(req, "roleRight", role.id, role.id))
+      .map((right: BlogRole) => getLinks(req, "roleRight", right.id, right.id))
       .reduce((prev, cur) => [...prev, ...cur], []),
   });
 };
