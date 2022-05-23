@@ -1,19 +1,40 @@
 {
   "name": "blog-server",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Backend function app for my blog",
   "scripts": {
-    "test": "echo \"No tests yet...\""
+    "build": "tsc",
+    "build:production": "npm run prestart && npm prune --production",
+    "watch": "tsc --w",
+    "prestart": "npm run build && func extensions install",
+    "start:host": "func start --port 7777",
+    "start": "npm-run-all --parallel start:host watch",
+    "setup": "node setup.js",
+    "test": "jest"
   },
   "author": "",
   "dependencies": {
+    "axios": "^0.27.2",
     "azure-storage": "^2.10.3",
+    "blog-spec": "github:SikoSoft/blog-spec#2.6.5",
     "dotenv": "^8.2.0",
+    "fs": "0.0.1-security",
     "into-stream": "^5.1.1",
-    "mariadb": "^2.1.5",
-    "node-fetch": "^2.6.0",
+    "knex": "^2.0.0",
+    "mysql": "^2.18.1",
     "parse-multipart": "^1.0.4",
+    "path": "^0.12.7",
     "query-string": "^6.10.1",
     "uuid": "^3.4.0"
+  },
+  "devDependencies": {
+    "@azure/functions": "^3.0.0",
+    "@types/jest": "^27.5.1",
+    "@types/mysql": "^2.15.21",
+    "jest": "^28.1.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.6.2",
+    "ts-jest": "^28.0.2",
+    "typescript": "^4.6.4"
   }
 }

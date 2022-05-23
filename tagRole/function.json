@@ -6,12 +6,13 @@
       "direction": "in",
       "name": "req",
       "methods": ["post", "delete"],
-      "route": "tagRole/{tag}/{role}"
+      "route": "tagRole/{tag}/{role?}"
     },
     {
       "type": "http",
       "direction": "out",
       "name": "res"
     }
-  ]
+  ],
+  "scriptFile": "../dist/tagRole/index.js"
 }
