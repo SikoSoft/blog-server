@@ -14,14 +14,19 @@ const connectionObject = {
 
 const checkForInstallation = async () => {
   try {
+    console.log("Checking for settings table...");
     await connection.select("*").from("settings");
   } catch (error) {
+    console.log(
+      "Something went wrong looking up settings table; performing setup now..."
+    );
     await setup(connection);
   }
 };
 
 export async function getConnection(): Promise<Knex> {
   if (!connection) {
+    console.log("No database connection yet; creating one now...");
     connection = knex({
       client: "mysql",
       connection: connectionObject,
