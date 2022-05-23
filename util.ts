@@ -92,6 +92,9 @@ function getLinks(
             console.log(entity, " needs ID and is not referencing entity");
             methods = methods.filter((method) => method !== "GET");
           }
+          if (needsIdToGet && ids.length === 0) {
+            methods = methods.filter((method) => method === "POST");
+          }
           for (const method of methods) {
             links.push(
               getEndpoint(req, {
