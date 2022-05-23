@@ -47,12 +47,16 @@ export default {
   },
   role: {
     methods: ["PUT", "POST", "DELETE"],
+    params: ["role"],
   },
   roleRight: {
     methods: ["POST", "DELETE"],
     params: ["role", "roleRight"],
   },
   roleRights: {
+    methods: ["GET"],
+  },
+  roles: {
     methods: ["GET"],
   },
   setting: {

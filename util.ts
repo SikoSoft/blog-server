@@ -7,6 +7,7 @@ import { BlogEntry } from "./interfaces/BlogEntry";
 import { stringify } from "query-string";
 import { BlogLink } from "./interfaces/BlogLink";
 import linkMap from "./linkMap";
+import { BlogRole } from "./interfaces/BlogRole";
 
 const initialState = {
   roles: [],
@@ -445,8 +446,8 @@ const getId = async (title: string): Promise<string> => {
   });
 };
 
-const getRoles = async (): Promise<[]> => {
-  if (state.roles.length) {
+const getRoles = async (): Promise<[BlogRole]> => {
+  if (state?.roles?.length) {
     return state.roles;
   }
   const connection = await getConnection();
