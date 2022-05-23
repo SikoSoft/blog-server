@@ -44,11 +44,12 @@ const httpTrigger: AzureFunction = async function (
       const roleRes = await connection
         .select("token")
         .from("roles")
-        .where("id", tokenRow.role);
+        .where("id", tokenRow.role)
+        .first();
       jsonReply(context, {
         role: tokenRow.role,
         sessToken,
-        authToken: roleRes[0].code,
+        authToken: roleRes.token,
       });
     }
   } else {
