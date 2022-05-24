@@ -47,7 +47,7 @@ const httpTrigger: AzureFunction = async function (
   if (context.bindingData.type) {
     blobName = `${context.bindingData.type}/${parts[0].filename}`;
   }
-  const buffer = new Buffer(parts[0].data, "base64");
+  const buffer = Buffer.from(parts[0].data, "base64");
   const stream = intoStream(buffer);
   const streamLength = buffer.length;
   await writeBlobContent(blobName, stream, streamLength, parts[0].type);
