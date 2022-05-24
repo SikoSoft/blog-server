@@ -461,6 +461,7 @@ const getRoles = async (): Promise<[BlogRole]> => {
 };
 
 export {
+  state,
   getConnection,
   baseUrl,
   shortDate,
