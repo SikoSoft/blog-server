@@ -48,7 +48,7 @@ const httpTrigger: AzureFunction = async function (
       [drafts ? "drafts" : "entries"]: entries,
       end,
       links: !end
-        ? getLinks(req, type, offset + settings.per_load, "more")
+        ? await getLinks(req, type, offset + settings.per_load, "more")
         : [],
     });
   } else {

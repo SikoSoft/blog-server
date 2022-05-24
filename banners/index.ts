@@ -8,11 +8,13 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   const banners = await connection.select("*").from("banners");
   jsonReply(context, {
-    banners: banners.map((banner) => ({
-      ...banner,
-      links: getLinks(req, "banner", banner.id),
-    })),
-    links: getLinks(req, ["banner", "uploadImage"]),
+    banners: await Promise.all(
+      banners.map(async (banner) => ({
+        ...banner,
+        links: await getLinks(req, "banner", banner.id),
+      }))
+    ),
+    links: await getLinks(req, ["banner", "uploadImage"]),
   });
 };
 

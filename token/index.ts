@@ -8,7 +8,7 @@ const getToken = async (connection, req: HttpRequest, code: string) => {
     .select("*")
     .from("tokens")
     .where("code", code);
-  token.links = getLinks(req, "token", code);
+  token.links = await getLinks(req, "token", code);
   return token;
 };
 

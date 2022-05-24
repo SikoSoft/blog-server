@@ -21,7 +21,7 @@ const httpTrigger: AzureFunction = async function (
       jsonReply(context, {
         banner: {
           ...banner,
-          links: getLinks(req, "banner", id),
+          links: await getLinks(req, "banner", id),
         },
       });
       break;
@@ -37,7 +37,7 @@ const httpTrigger: AzureFunction = async function (
       jsonReply(context, {
         banner: {
           ...banner,
-          links: getLinks(req, "banner", context.bindingData.id),
+          links: await getLinks(req, "banner", context.bindingData.id),
         },
       });
       break;

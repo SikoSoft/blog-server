@@ -18,7 +18,7 @@ const httpTrigger: AzureFunction = async function (
     const right = {
       role: context.bindingData.role,
       action: body.action,
-      links: getLinks(req, "roleRight", [
+      links: await getLinks(req, "roleRight", [
         context.bindingData.role,
         body.action,
       ]),

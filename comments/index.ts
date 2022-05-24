@@ -15,12 +15,14 @@ const httpTrigger: AzureFunction = async function (
     .where("entry_id", context.bindingData.id)
     .orderBy("time", "desc");
   jsonReply(context, {
-    comments: comments
-      .filter((comment) => comment.public === 1 || canViewUnpublished)
-      .map((comment) => ({
-        ...comment,
-        links: getLinks(req, "comment", comment.id),
-      })),
+    comments: await Promise.all(
+      comments
+        .filter((comment) => comment.public === 1 || canViewUnpublished)
+        .map(async (comment) => ({
+          ...comment,
+          links: await getLinks(req, "comment", comment.id),
+        }))
+    ),
   });
 };
 

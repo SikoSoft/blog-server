@@ -8,10 +8,12 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   const imageSizes = await connection.select("*").from("image_sizes");
   jsonReply(context, {
-    imageSizes: imageSizes.map((imageSize) => ({
-      ...imageSize,
-      links: getLinks(req, "imageSize", [imageSize.width]),
-    })),
+    imageSizes: await Promise.all(
+      imageSizes.map(async (imageSize) => ({
+        ...imageSize,
+        links: await getLinks(req, "imageSize", [imageSize.width]),
+      }))
+    ),
   });
 };
 

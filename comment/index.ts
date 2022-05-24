@@ -90,7 +90,7 @@ const addComment = async (
       name: body.name,
       message: body.message,
       time: body.time,
-      links: getLinks(req, "comment", qRes[0]),
+      links: await getLinks(req, "comment", qRes[0]),
     };
     if (score) {
       await connection("comments_scores").insert({

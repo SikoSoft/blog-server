@@ -8,26 +8,28 @@ export default {
   },
   contextLinks: {
     methods: ["GET"],
+    openMethods: ["GET"],
   },
   comment: {
     methods: ["PUT", "POST", "DELETE"],
+    openMethods: ["POST"],
     params: ["comment"],
   },
   comments: {
     methods: ["GET"],
+    openMethods: ["GET"],
     params: ["entry"],
-  },
-  draft: {
-    methods: ["GET"],
   },
   drafts: {
     methods: ["GET"],
   },
   entries: {
     methods: ["GET"],
+    openMethods: ["GET"],
   },
   entry: {
     methods: ["GET", "PUT", "POST", "DELETE"],
+    openMethods: ["GET"],
     params: ["entry"],
   },
   filter: {
@@ -35,6 +37,7 @@ export default {
   },
   filters: {
     methods: ["GET"],
+    openMethods: ["GET"],
   },
   filterOrder: {
     methods: ["PUT"],
@@ -75,6 +78,7 @@ export default {
   },
   tags: {
     methods: ["GET"],
+    openMethods: ["GET"],
   },
   token: {
     methods: ["PUT", "POST", "DELETE"],
@@ -85,9 +89,11 @@ export default {
   },
   uploadImage: {
     methods: ["POST"],
+    openMethods: ["POST"],
     params: ["imageType"],
   },
   useToken: {
     methods: ["POST"],
+    openMethods: ["POST"],
   },
 };

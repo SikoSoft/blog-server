@@ -9,13 +9,15 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   let tokens = await connection.select("*").from("tokens").orderBy("code");
   if (tokens.length) {
-    tokens = tokens.map((token) => ({
-      ...token,
-      links: getLinks(req, "token", token.code),
-    }));
+    tokens = await Promise.all(
+      tokens.map(async (token) => ({
+        ...token,
+        links: await getLinks(req, "token", token.code),
+      }))
+    );
   }
   jsonReply(context, {
-    links: getLinks(req, "token"),
+    links: await getLinks(req, "token"),
     tokens,
   });
 };

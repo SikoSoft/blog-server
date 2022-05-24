@@ -24,7 +24,10 @@ module.exports = async function (
       success: true,
       tagRole: {
         ...tagRole,
-        links: getLinks(req, "tagRole", [context.bindingData.tag, body.role]),
+        links: await getLinks(req, "tagRole", [
+          context.bindingData.tag,
+          body.role,
+        ]),
       },
     });
   } else if (req.method === "DELETE") {

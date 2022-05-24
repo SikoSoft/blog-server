@@ -19,7 +19,7 @@ const httpTrigger: AzureFunction = async function (
       .first();
     flushState("roles");
     jsonReply(context, {
-      role: { ...role, links: getLinks(req, "role", role.id) },
+      role: { ...role, links: await getLinks(req, "role", role.id) },
     });
   } else if (req.method === "PUT") {
     await connection("roles")
@@ -32,7 +32,7 @@ const httpTrigger: AzureFunction = async function (
       .first();
     flushState("roles");
     jsonReply(context, {
-      role: { ...role, links: getLinks(req, "role", role.id) },
+      role: { ...role, links: await getLinks(req, "role", role.id) },
     });
   } else if (req.method === "DELETE") {
     await connection("roles").where("id", context.bindingData.id).delete();

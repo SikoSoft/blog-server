@@ -11,11 +11,13 @@ const httpTrigger: AzureFunction = async function (
     .from("tags_rights")
     .orderBy(["tag", "role"]);
   jsonReply(context, {
-    tagRoles: rights.map((right) => ({
-      ...right,
-      links: getLinks(req, "tagRole", [right.tag, right.role]),
-    })),
-    links: getLinks(req, "tags"),
+    tagRoles: await Promise.all(
+      rights.map(async (right) => ({
+        ...right,
+        links: await getLinks(req, "tagRole", [right.tag, right.role]),
+      }))
+    ),
+    links: await getLinks(req, "tags"),
   });
 };
 

@@ -18,7 +18,7 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   const rights = await getSessionRights(req.headers["sess-token"]);
   const links = [
-    ...getLinks(req, [
+    ...(await getLinks(req, [
       "contextLinks",
       "drafts",
       "entries",
@@ -26,8 +26,8 @@ const httpTrigger: AzureFunction = async function (
       "entry",
       "tags",
       "useToken",
-    ]),
-    ...getContextLinks(req),
+    ])),
+    ...(await getContextLinks(req)),
   ];
   const settings = await getSettings();
   const sessionRole = await getSessionRole(req.headers["sess-token"]);

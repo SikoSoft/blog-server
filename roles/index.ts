@@ -7,11 +7,13 @@ const httpTrigger: AzureFunction = async function (
 ): Promise<void> {
   const roles = await getRoles();
   jsonReply(context, {
-    roles: roles.map((role) => ({
-      ...role,
-      links: getLinks(req, "role", role.id),
-    })),
-    links: getLinks(req, "role"),
+    roles: await Promise.all(
+      roles.map(async (role) => ({
+        ...role,
+        links: await getLinks(req, "role", role.id),
+      }))
+    ),
+    links: await getLinks(req, "role"),
   });
 };
 
