@@ -1,10 +1,20 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { getConnection, getLinks, jsonReply } from "../util";
+import {
+  crudViolation,
+  getConnection,
+  getLinks,
+  hasLinkAccess,
+  jsonReply,
+} from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  if (!(await hasLinkAccess(req, req.method, "tagRoles"))) {
+    crudViolation(context);
+    return;
+  }
   const connection = await getConnection();
   const rights = await connection
     .select("*")

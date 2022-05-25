@@ -7,6 +7,8 @@ import {
   processEntry,
   jsonReply,
   flushState,
+  crudViolation,
+  hasLinkAccess,
 } from "../util";
 
 const fieldsData = (fields: Array<string>, values: Array<any>) => {
@@ -38,6 +40,10 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  if (!(await hasLinkAccess(req, req.method, "entry"))) {
+    crudViolation(context);
+    return;
+  }
   const connection = await getConnection();
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};

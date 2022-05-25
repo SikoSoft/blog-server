@@ -1,11 +1,19 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { getContextLinks, jsonReply } from "../util";
+import {
+  crudViolation,
+  getContextLinks,
+  hasLinkAccess,
+  jsonReply,
+} from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  //console.log("get context links", req);
+  if (!(await hasLinkAccess(req, req.method, "contextLinks"))) {
+    crudViolation(context);
+    return;
+  }
   const links = await getContextLinks(req);
   jsonReply(context, { links });
 };

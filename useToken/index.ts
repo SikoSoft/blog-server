@@ -2,13 +2,23 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 
 import { v4 } from "uuid";
-import { getConnection, getIp, jsonReply } from "../util";
+import {
+  crudViolation,
+  getConnection,
+  getIp,
+  hasLinkAccess,
+  jsonReply,
+} from "../util";
 import { errorCodes } from "blog-spec";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ) {
+  if (!(await hasLinkAccess(req, req.method, "useToken"))) {
+    crudViolation(context);
+    return;
+  }
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const ip = getIp(req);

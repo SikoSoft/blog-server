@@ -1,11 +1,22 @@
 import { Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
-import { getConnection, jsonReply, flushState, getLinks } from "../util";
+import {
+  getConnection,
+  jsonReply,
+  flushState,
+  getLinks,
+  crudViolation,
+  hasLinkAccess,
+} from "../util";
 
 module.exports = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  if (!(await hasLinkAccess(req, req.method, "tagRole"))) {
+    crudViolation(context);
+    return;
+  }
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const connection = await getConnection();

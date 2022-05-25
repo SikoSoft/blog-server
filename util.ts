@@ -484,6 +484,10 @@ const getRoles = async (): Promise<[BlogRole]> => {
   return state.roles;
 };
 
+const crudViolation = async (context: Context): Promise<void> => {
+  jsonReply(context, { errorCode: spec.errorCodes.ERROR_CRUD_ACCESS });
+};
+
 export {
   state,
   getConnection,
@@ -508,4 +512,6 @@ export {
   flushState,
   getTextFromDelta,
   getRoles,
+  crudViolation,
+  hasLinkAccess,
 };

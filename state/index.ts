@@ -1,10 +1,20 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { flushState, jsonReply, state } from "../util";
+import {
+  crudViolation,
+  flushState,
+  hasLinkAccess,
+  jsonReply,
+  state,
+} from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
+  if (!(await hasLinkAccess(req, req.method, "state"))) {
+    crudViolation(context);
+    return;
+  }
   if (req.method === "GET") {
     jsonReply(context, { state });
   } else if (req.method === "DELETE") {

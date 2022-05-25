@@ -7,6 +7,8 @@ import {
   jsonReply,
   getTextFromDelta,
   getLinks,
+  crudViolation,
+  hasLinkAccess,
 } from "../util";
 import { errorCodes } from "blog-spec";
 import { parse } from "query-string";
@@ -55,6 +57,10 @@ const addComment = async (
   connection: Knex<any>,
   body: any
 ): Promise<any> => {
+  if (!(await hasLinkAccess(req, req.method, "comment"))) {
+    crudViolation(context);
+    return;
+  }
   const settings = await getSettings();
   let captchaCompliant = true;
   if (settings.use_captcha) {

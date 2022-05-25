@@ -1,12 +1,21 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 
-import { getConnection, jsonReply } from "../util";
+import {
+  crudViolation,
+  getConnection,
+  hasLinkAccess,
+  jsonReply,
+} from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  if (!(await hasLinkAccess(req, req.method, "filterRule"))) {
+    crudViolation(context);
+    return;
+  }
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const connection = await getConnection();

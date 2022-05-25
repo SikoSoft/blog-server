@@ -1,7 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 
-import { getConnection, jsonReply, getLinks } from "../util";
+import {
+  getConnection,
+  jsonReply,
+  getLinks,
+  crudViolation,
+  hasLinkAccess,
+} from "../util";
 
 const getToken = async (connection, req: HttpRequest, code: string) => {
   const [token] = await connection
@@ -16,6 +22,10 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  if (!(await hasLinkAccess(req, req.method, "token"))) {
+    crudViolation(context);
+    return;
+  }
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const connection = await getConnection();

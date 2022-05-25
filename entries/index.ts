@@ -1,4 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { hasLinkAccess, crudViolation } from "../util";
 
 const {
   getConnection,
@@ -15,7 +16,10 @@ const httpTrigger: AzureFunction = async function (
   req: HttpRequest,
   drafts: boolean = false
 ): Promise<any> {
-  context.log("inside entries...");
+  if (!(await hasLinkAccess(req, req.method, "entries"))) {
+    crudViolation(context);
+    return;
+  }
   const type = drafts ? "drafts" : "entries";
   const offset = context.bindingData.start
     ? parseInt(context.bindingData.start)

@@ -5,12 +5,18 @@ import {
   processEntry,
   getSettings,
   getLastEntry,
+  crudViolation,
+  hasLinkAccess,
 } from "../util.js";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
+  if (!(await hasLinkAccess(req, req.method, "tag"))) {
+    crudViolation(context);
+    return;
+  }
   const settings = await getSettings();
   const connection = await getConnection();
   const tagEntries = await connection

@@ -1,11 +1,22 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-import { getConnection, getSessionRights, jsonReply, getLinks } from "../util";
+import {
+  getConnection,
+  getSessionRights,
+  jsonReply,
+  getLinks,
+  crudViolation,
+  hasLinkAccess,
+} from "../util";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ) {
+  if (!(await hasLinkAccess(req, req.method, "comments"))) {
+    crudViolation(context);
+    return;
+  }
   const rights = await getSessionRights(req.headers["sess-token"]);
   const canViewUnpublished = rights.includes("view_unpublished_comment");
   const connection = await getConnection();

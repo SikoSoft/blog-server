@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { jsonReply } from "../util";
+import { crudViolation, hasLinkAccess, jsonReply } from "../util";
 
 const azureStorage = require("azure-storage");
 const multipart = require("parse-multipart");
@@ -40,7 +40,10 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
-  console.log("uploadImage is being called");
+  if (!(await hasLinkAccess(req, req.method, "uploadImage"))) {
+    crudViolation(context);
+    return;
+  }
   const boundary = multipart.getBoundary(req.headers["content-type"]);
   const parts = multipart.Parse(req.body, boundary);
   let blobName = getBlobName(parts[0].filename);
