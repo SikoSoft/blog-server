@@ -6,10 +6,25 @@ import {
   crudViolation,
   getConnection,
   getIp,
+  getSettings,
   hasLinkAccess,
   jsonReply,
 } from "../util";
 import { errorCodes } from "blog-spec";
+
+const getFailedAttempts = async (ip: string, time: number): Promise<number> => {
+  const connection = await getConnection();
+  const records = await connection
+    .select("time")
+    .from("tokens_invalid_attempts")
+    .where("ip", ip)
+    .andWhere("time", ">", time);
+  return records.length;
+};
+
+const floodReply = (context: Context): void => {
+  jsonReply(context, { errorCode: errorCodes.ERROR_FLOOD_DETECTED });
+};
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -21,8 +36,17 @@ const httpTrigger: AzureFunction = async function (
   }
   const body =
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
+  const settings = await getSettings();
   const ip = getIp(req);
   const now = Math.floor(new Date().getTime() / 1000);
+  const failedAttempts = await getFailedAttempts(
+    ip,
+    now - settings.token_flood_timespan
+  );
+  if (failedAttempts >= settings.token_flood_attempts) {
+    floodReply(context);
+    return;
+  }
   const connection = await getConnection();
   const qRes = await connection
     .select("*")
@@ -68,6 +92,10 @@ const httpTrigger: AzureFunction = async function (
       ip,
       time: now,
     });
+    if (failedAttempts + 1 >= settings.token_flood_attempts) {
+      floodReply(context);
+      return;
+    }
     jsonReply(context, {
       errorCode: errorCodes.ERROR_INVALID_TOKEN,
     });
