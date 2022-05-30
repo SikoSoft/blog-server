@@ -34,6 +34,12 @@ export default {
   },
   filter: {
     methods: ["GET", "PUT", "POST", "DELETE"],
+    openMethods: ["GET"],
+    params: ["filter"],
+  },
+  filterRule: {
+    methods: ["PUT", "POST", "DELETE"],
+    params: ["filterRule"],
   },
   filters: {
     methods: ["GET"],

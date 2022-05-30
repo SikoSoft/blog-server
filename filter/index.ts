@@ -9,6 +9,7 @@ import {
   getLastEntry,
   crudViolation,
   hasLinkAccess,
+  getLinks,
 } from "../util.js";
 
 const httpTrigger: AzureFunction = async function (
@@ -29,12 +30,28 @@ const httpTrigger: AzureFunction = async function (
       label: body.label,
       image: body.image,
     });
-    jsonReply(context, { success: res.length === 1 });
+    const filter = await connection
+      .select("*")
+      .from("filters")
+      .where("id", body.id)
+      .first();
+    jsonReply(context, {
+      success: res.length === 1,
+      filter: { ...filter, links: await getLinks(req, "filter", filter.id) },
+    });
   } else if (req.method === "PUT") {
     const res = await connection("filters")
       .update({ id: body.newId, label: body.label, image: body.image })
       .where("id", body.id);
-    jsonReply(context, { success: res === 1 });
+    const filter = await connection
+      .select("*")
+      .from("filters")
+      .where("id", body.newId)
+      .first();
+    jsonReply(context, {
+      success: res === 1,
+      filter: { ...filter, links: await getLinks(req, "filter", filter.id) },
+    });
   } else if (req.method === "DELETE") {
     const res = await connection("filters")
       .where("id", context.bindingData.id)
