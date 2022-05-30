@@ -16,10 +16,10 @@ const httpTrigger: AzureFunction = async function (
         ...filter,
         rules: await Promise.all(
           filtersRules
-            .filter(async (rule) => rule.filter_id === filter.id)
+            .filter((rule) => rule.filter_id === filter.id)
             .map(async (rule) => ({
               ...rule,
-              links: await getLinks(req, "filterRule", filter.id),
+              links: await getLinks(req, "filterRule", rule.id),
             }))
         ),
         links: [

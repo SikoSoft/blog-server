@@ -26,7 +26,7 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   if (req.method === "POST") {
     const res = await connection("filters").insert({
-      id: body.id,
+      id: body.newId,
       label: body.label,
       image: body.image,
     });
