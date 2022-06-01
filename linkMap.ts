@@ -6,6 +6,21 @@ export default {
   banners: {
     methods: ["GET"],
   },
+  block: {
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    params: ["block"],
+  },
+  blockContent: {
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    params: ["blockContent"],
+  },
+  blockContext: {
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    params: ["blockContext"],
+  },
+  blocks: {
+    methods: ["GET"],
+  },
   contextLinks: {
     methods: ["GET"],
     openMethods: ["GET"],
