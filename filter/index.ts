@@ -9,7 +9,7 @@ import {
   getLastEntry,
   crudViolation,
   hasLinkAccess,
-  getLinks,
+  processFilter,
 } from "../util.js";
 
 const httpTrigger: AzureFunction = async function (
@@ -26,7 +26,7 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   if (req.method === "POST") {
     const res = await connection("filters").insert({
-      id: body.newId,
+      id: body.id,
       label: body.label,
       image: body.image,
     });
@@ -37,7 +37,7 @@ const httpTrigger: AzureFunction = async function (
       .first();
     jsonReply(context, {
       success: res.length === 1,
-      filter: { ...filter, links: await getLinks(req, "filter", filter.id) },
+      filter: await processFilter(req, filter),
     });
   } else if (req.method === "PUT") {
     const res = await connection("filters")
@@ -50,7 +50,7 @@ const httpTrigger: AzureFunction = async function (
       .first();
     jsonReply(context, {
       success: res === 1,
-      filter: { ...filter, links: await getLinks(req, "filter", filter.id) },
+      filter: await processFilter(req, filter),
     });
   } else if (req.method === "DELETE") {
     const res = await connection("filters")
