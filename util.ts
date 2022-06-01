@@ -13,6 +13,7 @@ import { BlogEntityMethod } from "./interfaces/BlogEntityMethod";
 
 const initialState = {
   roles: [],
+  filtersRules: [],
   session: {},
   excludedEntries: {},
 };
@@ -488,6 +489,32 @@ const crudViolation = async (context: Context): Promise<void> => {
   jsonReply(context, { errorCode: spec.errorCodes.ERROR_CRUD_ACCESS });
 };
 
+const getFiltersRules = async (): Promise<any> => {
+  const connection = await getConnection();
+  const filtersRules = await connection.select("*").from("filters_rules");
+  return filtersRules;
+};
+
+const processFilter = async (req: HttpRequest, filter: any): Promise<any> => {
+  const filtersRules = await getFiltersRules();
+  return {
+    ...filter,
+    rules: await Promise.all(
+      filtersRules
+        .filter((rule) => rule.filter_id === filter.id)
+        .map(async (rule) => ({
+          ...rule,
+          links: await getLinks(req, "filterRule", rule.id),
+        }))
+    ),
+    links: [
+      ...(await getLinks(req, "filter", filter.id)),
+      ...(await getLinks(req, "filterRule")),
+      ...(await getLinks(req, "uploadImage", "filter")),
+    ],
+  };
+};
+
 export {
   state,
   getConnection,
@@ -514,4 +541,6 @@ export {
   getRoles,
   crudViolation,
   hasLinkAccess,
+  getFiltersRules,
+  processFilter,
 };
