@@ -12,15 +12,12 @@ const connectionObject = {
   database: process.env.DB_NAME,
 };
 
-const checkForInstallation = async () => {
+const checkInstallation = async () => {
   try {
-    console.log("Checking for settings table...");
-    await connection.select("*").from("settings");
+    setup(connection);
+    console.log("Making sure tables are setup correctly...");
   } catch (error) {
-    console.log(
-      "Something went wrong looking up settings table; performing setup now..."
-    );
-    await setup(connection);
+    console.log("Something went wrong preparing tables");
   }
 };
 
@@ -31,7 +28,7 @@ export async function getConnection(): Promise<Knex> {
       client: "mysql",
       connection: connectionObject,
     });
-    await checkForInstallation();
+    await checkInstallation();
   }
   return connection;
 }
