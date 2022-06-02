@@ -42,7 +42,7 @@ const httpTrigger: AzureFunction = async function (
         links: await getLinks(req, "block", block.id),
       }))
     ),
-    links: await getLinks(req, "block"),
+    links: await getLinks(req, ["block", "blockContext", "blockContent"]),
   });
 };
 
