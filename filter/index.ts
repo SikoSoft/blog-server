@@ -1,18 +1,41 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
+import { getSettings } from "../util/config";
+import { getConnection } from "../util/database";
+import { getLastEntry, processEntry } from "../util/entries";
+import { getLinks, hasLinkAccess } from "../util/links.js";
+import { crudViolation, jsonReply } from "../util/reply";
 
-import {
-  getConnection,
-  jsonReply,
-  processEntry,
-  getSettings,
-  getLastEntry,
-  crudViolation,
-  hasLinkAccess,
-  processFilter,
-} from "../util.js";
+export const getFiltersRules = async (): Promise<any> => {
+  const connection = await getConnection();
+  const filtersRules = await connection.select("*").from("filters_rules");
+  return filtersRules;
+};
 
-const httpTrigger: AzureFunction = async function (
+export const processFilter = async (
+  req: HttpRequest,
+  filter: any
+): Promise<any> => {
+  const filtersRules = await getFiltersRules();
+  return {
+    ...filter,
+    rules: await Promise.all(
+      filtersRules
+        .filter((rule) => rule.filter_id === filter.id)
+        .map(async (rule) => ({
+          ...rule,
+          links: await getLinks(req, "filterRule", rule.id),
+        }))
+    ),
+    links: [
+      ...(await getLinks(req, "filter", filter.id)),
+      ...(await getLinks(req, "filterRule")),
+      ...(await getLinks(req, "uploadImage", "filter")),
+    ],
+  };
+};
+
+export const run: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<any> {
@@ -136,4 +159,4 @@ const httpTrigger: AzureFunction = async function (
   }
 };
 
-export default httpTrigger;
+export default run;

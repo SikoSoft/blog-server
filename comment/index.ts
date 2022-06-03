@@ -1,20 +1,16 @@
 import axios from "axios";
-import {
-  getConnection,
-  getSettings,
-  verifyCaptcha,
-  getIp,
-  jsonReply,
-  getTextFromDelta,
-  getLinks,
-  crudViolation,
-  hasLinkAccess,
-} from "../util";
 import { errorCodes } from "blog-spec";
 import { parse } from "query-string";
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { SentimentAnalysisResponse } from "../interfaces/SentimentAnalysisResponse";
 import { Knex } from "knex";
+import { verifyCaptcha } from "../util/captcha";
+import { getSettings } from "../util/config";
+import { getTextFromDelta } from "../util/data";
+import { getConnection } from "../util/database";
+import { hasLinkAccess, getLinks } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
+import { getIp } from "../util/session";
 
 const getSentimentScore = async (text: string): Promise<any> => {
   const settings = await getSettings();

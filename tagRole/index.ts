@@ -1,13 +1,9 @@
 import { Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
-import {
-  getConnection,
-  jsonReply,
-  flushState,
-  getLinks,
-  crudViolation,
-  hasLinkAccess,
-} from "../util";
+import { getConnection } from "../util/database";
+import { hasLinkAccess, getLinks } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
+import { flushState } from "../util/state";
 
 module.exports = async function (
   context: Context,

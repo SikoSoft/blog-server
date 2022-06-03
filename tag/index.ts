@@ -1,13 +1,9 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import {
-  getConnection,
-  jsonReply,
-  processEntry,
-  getSettings,
-  getLastEntry,
-  crudViolation,
-  hasLinkAccess,
-} from "../util.js";
+import { getSettings } from "../util/config";
+import { getConnection } from "../util/database";
+import { getLastEntry, processEntry } from "../util/entries";
+import { hasLinkAccess } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,

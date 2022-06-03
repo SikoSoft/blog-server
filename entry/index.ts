@@ -1,15 +1,10 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
-
-import {
-  getConnection,
-  getId,
-  processEntry,
-  jsonReply,
-  flushState,
-  crudViolation,
-  hasLinkAccess,
-} from "../util";
+import { getConnection } from "../util/database";
+import { getId, processEntry } from "../util/entries";
+import { hasLinkAccess } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
+import { flushState } from "../util/state";
 
 const fieldsData = (fields: Array<string>, values: Array<any>) => {
   return fields.reduce((prev, cur) => ({ ...prev, [cur]: values[cur] }), {});

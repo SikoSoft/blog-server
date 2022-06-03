@@ -1,13 +1,9 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 import { BlogBlock } from "../interfaces/BlogBlock";
-import {
-  jsonReply,
-  getConnection,
-  getLinks,
-  crudViolation,
-  hasLinkAccess,
-} from "../util";
+import { getConnection } from "../util/database";
+import { getLinks, hasLinkAccess } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
 
 const getBlock = async (
   req: HttpRequest,

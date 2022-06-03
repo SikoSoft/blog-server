@@ -1,13 +1,8 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
-
-import {
-  getConnection,
-  jsonReply,
-  getLinks,
-  crudViolation,
-  hasLinkAccess,
-} from "../util";
+import { getConnection } from "../util/database";
+import { getLinks, hasLinkAccess } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
 
 const getToken = async (connection, req: HttpRequest, code: string) => {
   const [token] = await connection

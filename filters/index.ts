@@ -1,7 +1,8 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { getLinks, getFiltersRules, processFilter } from "../util";
-
-const { getConnection, jsonReply } = require("../util.js");
+import { processFilter } from "../filter";
+import { getConnection } from "../util/database";
+import { getLinks } from "../util/links";
+import { jsonReply } from "../util/reply";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,

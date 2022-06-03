@@ -1,5 +1,5 @@
 import { AzureFunction, Context } from "@azure/functions";
-import { getConnection } from "../util";
+import { getConnection } from "../util/database";
 
 const timerTrigger: AzureFunction = async function (
   context: Context

@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import { crudViolation, hasLinkAccess, jsonReply } from "../util";
-
+import { hasLinkAccess } from "../util/links";
+import { crudViolation, jsonReply } from "../util/reply";
 const azureStorage = require("azure-storage");
 const multipart = require("parse-multipart");
 const { shortDate } = require("../util");

@@ -1,16 +1,12 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
-
 import { v4 } from "uuid";
-import {
-  crudViolation,
-  getConnection,
-  getIp,
-  getSettings,
-  hasLinkAccess,
-  jsonReply,
-} from "../util";
 import { errorCodes } from "blog-spec";
+import { getSettings } from "../util/config";
+import { getConnection } from "../util/database";
+import { hasLinkAccess } from "../util/links";
+import { jsonReply, crudViolation } from "../util/reply";
+import { getIp } from "../util/session";
 
 const getFailedAttempts = async (ip: string, time: number): Promise<number> => {
   const connection = await getConnection();
