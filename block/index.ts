@@ -1,5 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
+import { BlogBlock } from "../interfaces/BlogBlock";
 import {
   jsonReply,
   getConnection,
@@ -7,6 +8,26 @@ import {
   crudViolation,
   hasLinkAccess,
 } from "../util";
+
+const getBlock = async (
+  req: HttpRequest,
+  id: number
+): Promise<BlogBlock | boolean> => {
+  try {
+    const connection = await getConnection();
+    const block = await connection
+      .select("*")
+      .from("blocks")
+      .where("id", id)
+      .first();
+    if (block) {
+      return { ...block, links: await getLinks(req, "block", id) };
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return false;
+};
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -22,6 +43,11 @@ const httpTrigger: AzureFunction = async function (
   const connection = await getConnection();
   let block;
   switch (req.method) {
+    case "GET":
+      jsonReply(context, {
+        block: await getBlock(req, context.bindingData.id),
+      });
+      break;
     case "POST":
       const res = await connection("blocks").insert({ name: body.name });
       block = await connection

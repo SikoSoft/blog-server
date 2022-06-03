@@ -8,6 +8,7 @@ export default {
   },
   block: {
     methods: ["GET", "POST", "PUT", "DELETE"],
+    openMethods: ["GET"],
     params: ["block"],
   },
   blockContent: {
