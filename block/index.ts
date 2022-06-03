@@ -16,8 +16,31 @@ const getBlock = async (
       .from("blocks")
       .where("id", id)
       .first();
+    const content = await connection
+      .select("*")
+      .from("blocks_content")
+      .where("block_id", id);
+    const context = await connection
+      .select("*")
+      .from("blocks_context")
+      .where("block_id", id);
     if (block) {
-      return { ...block, links: await getLinks(req, "block", id) };
+      return {
+        ...block,
+        content: await Promise.all(
+          content.map(async (content) => ({
+            ...content,
+            links: await getLinks(req, "blockContent", content.id),
+          }))
+        ),
+        context: await Promise.all(
+          context.map(async (context) => ({
+            ...context,
+            links: await getLinks(req, "blockContent", context.id),
+          }))
+        ),
+        links: await getLinks(req, "block", id),
+      };
     }
   } catch (error) {
     console.error(error);
@@ -37,7 +60,6 @@ const httpTrigger: AzureFunction = async function (
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
 
   const connection = await getConnection();
-  let block;
   switch (req.method) {
     case "GET":
       jsonReply(context, {
@@ -46,29 +68,16 @@ const httpTrigger: AzureFunction = async function (
       break;
     case "POST":
       const res = await connection("blocks").insert({ name: body.name });
-      block = await connection
-        .select("*")
-        .from("blocks")
-        .where("id", res[0])
-        .first();
       jsonReply(context, {
-        block: { ...block, links: await getLinks(req, "block", res[0]) },
+        block: await getBlock(req, res[0]),
       });
       break;
     case "PUT":
       await connection("blocks")
         .update({ name: body.name })
         .where("id", context.bindingData.id);
-      block = await connection
-        .select("*")
-        .from("blocks")
-        .where("id", context.bindingData.id)
-        .first();
       jsonReply(context, {
-        block: {
-          ...block,
-          links: await getLinks(req, "block", context.bindingData.id),
-        },
+        block: await getBlock(req, context.bindingData.id),
       });
       break;
     case "DELETE":
