@@ -8,8 +8,8 @@ import linkMap from "./linkMap";
 import { getSessionRights } from "./session";
 import { contextIsValid } from "./spec";
 
-export function baseUrl(req): string {
-  const url = new URL(req.originalUrl);
+export function baseUrl(req: HttpRequest): string {
+  const url = new URL(req.url);
   const pathDirs = url.pathname.split("/");
   return `${url.origin}${pathDirs
     .slice(0, pathDirs.length - Object.keys(req.params).length - 1)
@@ -116,7 +116,9 @@ export async function getContextLinks(
                   req,
                   context.props[0],
                   context.props[1],
-                  context.id
+                  context.id === "needs" && context.props?.[1]
+                    ? context.props[1]
+                    : context.id
                 )
               : []
           )
