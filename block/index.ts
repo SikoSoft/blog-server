@@ -5,7 +5,7 @@ import { getConnection } from "../util/database";
 import { getLinks, hasLinkAccess } from "../util/links";
 import { crudViolation, jsonReply } from "../util/reply";
 
-const getBlock = async (
+export const getBlock = async (
   req: HttpRequest,
   id: number
 ): Promise<BlogBlock | boolean> => {
@@ -48,7 +48,7 @@ const getBlock = async (
   return false;
 };
 
-const httpTrigger: AzureFunction = async function (
+export const run: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
@@ -95,4 +95,4 @@ const httpTrigger: AzureFunction = async function (
   }
 };
 
-export default httpTrigger;
+export default run;

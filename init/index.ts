@@ -1,4 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { getBlock } from "../block";
 import { getSettings, getRoles } from "../util/config";
 import { getConnection } from "../util/database";
 import { getLinks, getContextLinks } from "../util/links";
@@ -38,12 +39,20 @@ const httpTrigger: AzureFunction = async function (
       .where("id", settings.header_banner)
       .first();
   }
+  const blocks = [];
+  if (settings.sidebar_block) {
+    blocks.push(await getBlock(req, settings.sidebar_block));
+  }
+  if (settings.footer_block) {
+    blocks.push(await getBlock(req, settings.footer_block));
+  }
   jsonReply(context, {
     user,
     roles,
     settings,
     header,
     links,
+    blocks,
   });
 };
 
