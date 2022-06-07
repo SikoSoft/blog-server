@@ -58,6 +58,9 @@ const createColumns = async (
             columnBuilder = table.integer(column.id, column.maxLength || 10);
           }
           break;
+        case "float":
+          columnBuilder = table.float(column.id);
+          break;
         case "varchar":
           columnBuilder = table.string(column.id, column.maxLength || 255);
           break;
@@ -65,9 +68,15 @@ const createColumns = async (
           columnBuilder = table.text(column.id, "longtext");
           break;
       }
-      columnBuilder.defaultTo(
-        column.default ? column.default : column.dataType === "int" ? 0 : ""
-      );
+      if (column.dataType !== "longtext") {
+        columnBuilder.defaultTo(
+          column.default
+            ? column.default
+            : column.dataType === "int" || column.dataType === "float"
+            ? 0
+            : ""
+        );
+      }
       if (column.primary) {
         columnBuilder.primary();
       }
@@ -80,7 +89,11 @@ const createColumns = async (
         } column`
       );
     }
-  });
+  })
+    .then()
+    .catch((error) => {
+      console.error(error);
+    });
 };
 
 const createTable = async (connection, model) => {
