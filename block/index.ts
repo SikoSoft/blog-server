@@ -30,7 +30,6 @@ export const getBlock = async (
         (content) => content.type === spec.blockTypes.BLOCK_TYPE_COMPONENT
       )
       .map((content) => content.id);
-    console.log("contentIds", contentIdsWithProps);
     let componentProps = [];
     if (contentIdsWithProps.length) {
       componentProps = await connection
