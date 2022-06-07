@@ -4,6 +4,7 @@ import { BlogBlock } from "../interfaces/BlogBlock";
 import { getConnection } from "../util/database";
 import { getLinks, hasLinkAccess } from "../util/links";
 import { crudViolation, jsonReply } from "../util/reply";
+import spec = require("blog-spec");
 
 export const getBlock = async (
   req: HttpRequest,
@@ -24,12 +25,34 @@ export const getBlock = async (
       .select("*")
       .from("blocks_context")
       .where("block_id", id);
+    const contentIdsWithProps = content
+      .filter(
+        (content) => content.type === spec.blockTypes.BLOCK_TYPE_COMPONENT
+      )
+      .map((content) => content.id);
+    console.log("contentIds", contentIdsWithProps);
+    let componentProps = [];
+    if (contentIdsWithProps.length) {
+      componentProps = await connection
+        .select("*")
+        .from("blocks_content_components_props")
+        .whereIn("content_id", contentIdsWithProps);
+    }
     if (block) {
       return {
         ...block,
         content: await Promise.all(
           content.map(async (content) => ({
             ...content,
+            ...(content.type === spec.blockTypes.BLOCK_TYPE_COMPONENT &&
+            componentProps.filter((prop) => prop.content_id === content.id)
+              .length
+              ? {
+                  props: componentProps.filter(
+                    (prop) => prop.content_id === content.id
+                  ),
+                }
+              : { props: [] }),
             links: await getLinks(req, "blockContent", content.id),
           }))
         ),
