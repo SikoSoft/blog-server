@@ -1,8 +1,9 @@
 import { DatabaseTable } from "blog-spec";
+import crypto = require("crypto");
 const fs = require("fs");
 const { rights, roles, settings, typeMap, models } = require("blog-spec");
 
-const syncTables = async (connection) => {
+export const syncTables = async (connection) => {
   for (const model of models) {
     const exists = await connection.schema.hasTable(model.id);
     if (exists) {
@@ -152,11 +153,17 @@ const setupHeader = async (connection) => {
   await connection("settings").insert({ id: "header_banner", int: 1 });
 };
 
-export default async function (connection) {
+export const getModelsHash = (): string => {
+  const modelsString = JSON.stringify(models);
+  const hash = crypto.createHash("md5").update(modelsString).digest("hex");
+  return hash;
+};
+
+export const setup = async (connection) => {
   await syncTables(connection);
   //await setupTables(connection);
   //await setupRoles(connection);
   //await setupRights(connection);
   //await setupSettings(connection);
   //await setupHeader(connection);
-}
+};

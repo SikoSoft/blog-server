@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { Knex, knex } from "knex";
-import setup from "./setup";
+import { setup, getModelsHash } from "./setup";
 
 let connection: Knex<any>;
 
@@ -28,7 +28,20 @@ export async function getConnection(): Promise<Knex> {
       client: "mysql",
       connection: connectionObject,
     });
-    await checkInstallation();
+    const modelsHash = getModelsHash();
+    if (
+      !process.env.SPEC_MODELS_HASH ||
+      process.env.SPEC_MODELS_HASH !== modelsHash
+    ) {
+      console.log(
+        "Database not yet setup, or models have drifted from current setup."
+      );
+      await checkInstallation();
+    } else {
+      console.log(
+        "Model state matches current setup; skipping database integrity check."
+      );
+    }
   }
   return connection;
 }
