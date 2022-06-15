@@ -4,6 +4,15 @@ import { getConnection } from "../util/database";
 import { hasLinkAccess, getLinks } from "../util/links";
 import { crudViolation, jsonReply } from "../util/reply";
 
+const getBodyData = (body: Record<string, any>): Record<string, any> => {
+  return {
+    ...(body.block_id ? { block_id: body.block_id } : {}),
+    ...(body.type ? { type: body.type } : {}),
+    ...(body.content ? { content: body.content } : {}),
+    ...(body.order ? { order: body.order } : {}),
+  };
+};
+
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
@@ -19,11 +28,7 @@ const httpTrigger: AzureFunction = async function (
   let blockContent;
   switch (req.method) {
     case "POST":
-      const res = await connection("blocks_content").insert({
-        block_id: body.block_id,
-        type: body.type,
-        content: body.content,
-      });
+      const res = await connection("blocks_content").insert(getBodyData(body));
       blockContent = await connection
         .select("*")
         .from("blocks_content")
@@ -38,11 +43,7 @@ const httpTrigger: AzureFunction = async function (
       break;
     case "PUT":
       await connection("blocks_content")
-        .update({
-          block_id: body.block_id,
-          type: body.type,
-          content: body.content,
-        })
+        .update(getBodyData(body))
         .where({ id: context.bindingData.id });
       blockContent = await connection
         .select("*")
