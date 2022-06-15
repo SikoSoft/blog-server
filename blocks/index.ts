@@ -14,7 +14,10 @@ const httpTrigger: AzureFunction = async function (
   }
   const connection = await getConnection();
   const blocks = await connection.select("*").from("blocks");
-  const blocksContent = await connection.select("*").from("blocks_content");
+  const blocksContent = await connection
+    .select("*")
+    .from("blocks_content")
+    .orderBy("order");
   const blocksContext = await connection.select("*").from("blocks_context");
   const componentProps = await connection
     .select("*")

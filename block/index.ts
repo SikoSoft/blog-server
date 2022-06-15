@@ -20,7 +20,8 @@ export const getBlock = async (
     const content = await connection
       .select("*")
       .from("blocks_content")
-      .where("block_id", id);
+      .where("block_id", id)
+      .orderBy("order");
     const context = await connection
       .select("*")
       .from("blocks_context")
