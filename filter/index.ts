@@ -35,6 +35,15 @@ export const processFilter = async (
   };
 };
 
+const getBodyData = (body: Record<string, any>): Record<string, any> => {
+  return {
+    ...(body.newId ? { id: body.newId } : {}),
+    ...(body.label ? { label: body.label } : {}),
+    ...(body.image ? { image: body.image } : {}),
+    ...(body.order ? { order: body.order } : {}),
+  };
+};
+
 export const run: AzureFunction = async function (
   context: Context,
   req: HttpRequest
@@ -64,12 +73,12 @@ export const run: AzureFunction = async function (
     });
   } else if (req.method === "PUT") {
     const res = await connection("filters")
-      .update({ id: body.newId, label: body.label, image: body.image })
-      .where("id", body.id);
+      .update(getBodyData(body))
+      .where("id", context.bindingData.id);
     const filter = await connection
       .select("*")
       .from("filters")
-      .where("id", body.newId)
+      .where("id", body.newId || context.bindingData.id)
       .first();
     jsonReply(context, {
       success: res === 1,
