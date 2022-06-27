@@ -1,7 +1,30 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { Knex } from "knex";
 import { parse } from "query-string";
 import { getConnection } from "../util/database";
+import { getLinks } from "../util/links";
 import { jsonReply } from "../util/reply";
+
+const getImageSize = async (
+  req: HttpRequest,
+  connection: Knex<any, any[]>,
+  width: number
+): Promise<any> => {
+  try {
+    const imageSize = await connection
+      .select("*")
+      .from("image_sizes")
+      .where("width", width)
+      .first();
+    return {
+      ...imageSize,
+      links: await getLinks(req, "imageSize", imageSize.width),
+    };
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -22,14 +45,18 @@ const httpTrigger: AzureFunction = async function (
         .where("width", context.bindingData.width)
         .onConflict()
         .merge();
-      jsonReply(context, {});
+      jsonReply(context, {
+        imageSize: await getImageSize(req, connection, body.width),
+      });
       break;
     case "POST":
       await connection("image_sizes")
         .insert({ width: body.width, height: body.height })
         .onConflict()
         .merge();
-      jsonReply(context, {});
+      jsonReply(context, {
+        imageSize: await getImageSize(req, connection, body.width),
+      });
       break;
     case "DELETE":
       await connection("image_sizes")
