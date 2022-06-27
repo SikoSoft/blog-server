@@ -16,6 +16,7 @@ const httpTrigger: AzureFunction = async function (
         links: await getLinks(req, "imageSize", [imageSize.width]),
       }))
     ),
+    links: await getLinks(req, "imageSize"),
   });
 };
 

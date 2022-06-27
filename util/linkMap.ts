@@ -66,6 +66,7 @@ export default {
   },
   imageSize: {
     methods: ["PUT", "POST", "DELETE"],
+    params: ["imageSize"],
   },
   imageSizes: {
     methods: ["GET"],
