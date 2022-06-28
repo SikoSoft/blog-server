@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { getBlock } from "../block";
-import { getSettings, getRoles } from "../util/config";
+import { getSettings, getRoles, getImageSizes } from "../util/config";
 import { getConnection } from "../util/database";
 import { getLinks, getContextLinks } from "../util/links";
 import { jsonReply } from "../util/reply";
@@ -24,7 +24,10 @@ const httpTrigger: AzureFunction = async function (
     ])),
     ...(await getContextLinks(req)),
   ];
-  const settings = await getSettings();
+  const settings = {
+    ...(await getSettings()),
+    imageSizes: await getImageSizes(),
+  };
   const sessionRole = await getSessionRole(req.headers["sess-token"]);
   const user = {
     role: sessionRole ? sessionRole : settings.role_guest,

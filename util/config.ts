@@ -81,3 +81,18 @@ export const getRoles = async (): Promise<[BlogRole]> => {
   state.roles = roles;
   return state.roles;
 };
+
+export async function getImageSizes() {
+  if (state.imageSizes) {
+    return Promise.resolve(state.imageSizes);
+  }
+  return new Promise(async (resolve, reject) => {
+    try {
+      const connection = await getConnection();
+      state.imageSizes = await connection.select("*").from("image_sizes");
+      resolve(state.imageSizes);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
