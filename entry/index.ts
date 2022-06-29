@@ -2,7 +2,7 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { parse } from "query-string";
 import { getConnection } from "../util/database";
 import { getId, processEntry } from "../util/entries";
-import { hasLinkAccess } from "../util/links";
+import { getLinks, hasLinkAccess } from "../util/links";
 import { crudViolation, jsonReply } from "../util/reply";
 import { flushState } from "../util/state";
 
@@ -101,7 +101,10 @@ const httpTrigger: AzureFunction = async function (
   if (req.method !== "GET") {
     await syncTags(connection, body.id, body.tags ? body.tags : []);
   }
-  jsonReply(context, { entry: entry ? await processEntry(req, entry) : {} });
+  jsonReply(context, {
+    entry: entry ? await processEntry(req, entry) : {},
+    links: await getLinks(req, "image"),
+  });
 };
 
 export default httpTrigger;

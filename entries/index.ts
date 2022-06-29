@@ -49,9 +49,12 @@ const httpTrigger: AzureFunction = async function (
     jsonReply(context, {
       [drafts ? "drafts" : "entries"]: entries,
       end,
-      links: !end
-        ? await getLinks(req, type, offset + settings.per_load, "more")
-        : [],
+      links: [
+        ...(await getLinks(req, "image")),
+        ...(!end
+          ? await getLinks(req, type, offset + settings.per_load, "more")
+          : []),
+      ],
     });
   } else {
     jsonReply(context, {
