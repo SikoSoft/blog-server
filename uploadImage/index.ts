@@ -55,7 +55,7 @@ const httpTrigger: AzureFunction = async function (
   const streamLength = buffer.length;
   await writeBlobContent(blobName, stream, streamLength, parts[0].type);
   jsonReply(context, {
-    url: `${process.env.AZURE_STORAGE_URL}/${blobName}`,
+    url: `${process.env.AZURE_STORAGE_URL}/images/${blobName}`,
   });
 };
 
