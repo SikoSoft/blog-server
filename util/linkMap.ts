@@ -64,6 +64,10 @@ export default {
   filterOrder: {
     methods: ["PUT"],
   },
+  image: {
+    methods: ["GET"],
+    openMethods: ["GET"],
+  },
   imageSize: {
     methods: ["PUT", "POST", "DELETE"],
     params: ["imageSize"],
