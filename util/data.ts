@@ -1,3 +1,5 @@
+import MemoryStream from "memorystream";
+
 export function pad(x: number, padding: number = 2): string {
   return x.toString().padStart(padding, "0");
 }
@@ -28,4 +30,14 @@ export function sanitizeTitle(title: string): string {
     .toLowerCase()
     .replace(/ /g, "-")
     .replace(/[^a-z0-9-]/g, "");
+}
+
+export async function stream2buffer(stream: MemoryStream): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const _buf = Array<any>();
+
+    stream.on("data", (chunk) => _buf.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(_buf)));
+    stream.on("error", (err) => reject(`error converting stream - ${err}`));
+  });
 }
