@@ -3,6 +3,7 @@ const initialState = {
   filtersRules: [],
   session: {},
   excludedEntries: {},
+  imageVersions: {},
 };
 
 export let state = { ...JSON.parse(JSON.stringify(initialState)) };
