@@ -4,8 +4,8 @@ import { crudViolation } from "../util/reply";
 import {
   addImageVersion,
   containerName,
+  generateImageVersions,
   getImageVersions,
-  getOriginalImageSize,
 } from "../util/image";
 import { BlogImageSize } from "../interfaces/BlogImageSize";
 
@@ -21,13 +21,12 @@ const httpTrigger: AzureFunction = async function (
   const { file } = req.query;
   const versions = await getImageVersions(file);
   if (versions.length === 0) {
-    let original: BlogImageSize;
+    //let original: BlogImageSize;
     try {
-      original = await getOriginalImageSize(
-        req.query.file.replace(`/${containerName}/`, "")
-      );
-      const { width, height } = original;
-      addImageVersion(file, width, height, 1);
+      //original = await getOriginalImageSize(file);
+      //const { width, height } = original;
+      //addImageVersion(file, width, height, 1);
+      await generateImageVersions(file);
     } catch (error) {
       console.log(
         `Error encountered while trying to retrieve image meta data for ${file}`

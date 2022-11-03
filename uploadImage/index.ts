@@ -1,40 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { uploadImage } from "../util/image";
 import { hasLinkAccess } from "../util/links";
 import { crudViolation, jsonReply } from "../util/reply";
-const azureStorage = require("azure-storage");
 const multipart = require("parse-multipart");
 const { shortDate } = require("../util");
-const intoStream = require("into-stream");
-
-const blobService = azureStorage.createBlobService();
-const containerName = "images";
 
 const getBlobName = (fileName) => {
   return `${shortDate()}/${fileName}`;
 };
-
-async function writeBlobContent(blobName, stream, streamLength, contentType) {
-  return new Promise<void>((resolve, reject) => {
-    blobService.createBlockBlobFromStream(
-      containerName,
-      blobName,
-      stream,
-      streamLength,
-      {
-        contentSettings: {
-          contentType,
-        },
-      },
-      (err) => {
-        if (err) {
-          console.log("error encountered", err);
-          reject(err);
-        }
-        resolve();
-      }
-    );
-  });
-}
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -50,10 +23,13 @@ const httpTrigger: AzureFunction = async function (
   if (context.bindingData.type) {
     blobName = `${context.bindingData.type}/${parts[0].filename}`;
   }
-  const buffer = Buffer.from(parts[0].data, "base64");
-  const stream = intoStream(buffer);
-  const streamLength = buffer.length;
-  await writeBlobContent(blobName, stream, streamLength, parts[0].type);
+
+  await uploadImage(
+    blobName,
+    Buffer.from(parts[0].data, "base64"),
+    parts[0].type
+  );
+
   jsonReply(context, {
     url: `${process.env.AZURE_STORAGE_URL}/images/${blobName}`,
   });
