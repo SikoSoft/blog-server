@@ -1,13 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { hasLinkAccess } from "../util/links";
-import { crudViolation } from "../util/reply";
+import { crudViolation, jsonReply } from "../util/reply";
 import {
-  addImageVersion,
   containerName,
-  generateImageVersions,
-  getImageVersions,
+  generateImageVersion,
+  getNearestImageConfigSize,
+  getVersionFileName,
+  imageVersionExists,
 } from "../util/image";
-import { BlogImageSize } from "../interfaces/BlogImageSize";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
@@ -18,27 +18,47 @@ const httpTrigger: AzureFunction = async function (
     return;
   }
 
-  const { file } = req.query;
-  const versions = await getImageVersions(file);
-  if (versions.length === 0) {
-    //let original: BlogImageSize;
-    try {
-      //original = await getOriginalImageSize(file);
-      //const { width, height } = original;
-      //addImageVersion(file, width, height, 1);
-      await generateImageVersions(file);
-    } catch (error) {
-      console.log(
-        `Error encountered while trying to retrieve image meta data for ${file}`
-      );
+  const { file, width, height } = req.query;
+
+  try {
+    const size = await getNearestImageConfigSize(file, {
+      width: width ? parseInt(width) : 0,
+      height: height ? parseInt(height) : 0,
+    });
+
+    console.log("NEAREST IMAGE SIZE", size);
+
+    const exists = await imageVersionExists(file, size);
+    const versionFile = await getVersionFileName(file, size);
+
+    console.log("EXISTS", file, versionFile, exists);
+
+    if (!exists) {
+      await generateImageVersion(file, size);
     }
+
+    console.log("VERSION FILE", versionFile);
+
+    const url = new URL(
+      [containerName, versionFile].join("/"),
+      process.env.AZURE_STORAGE_URL
+    );
+
+    context.res = {
+      status: 302,
+      headers: {
+        Location: url.toString(),
+      },
+    };
+  } catch (error) {
+    console.log(
+      `Error encountered while trying to get image ${file}: ${JSON.stringify(
+        error
+      )}`
+    );
+    jsonReply(context, { test: " " }, 400);
   }
-  context.res = {
-    body: JSON.stringify({
-      url: "test",
-      images: versions,
-    }),
-  };
+
   /*
   context.res = {
     status: 302,

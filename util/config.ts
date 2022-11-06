@@ -2,6 +2,7 @@ import spec = require("blog-spec");
 import { BlogRole } from "../interfaces/BlogRole";
 import { state } from "./state";
 import { getConnection } from "./database";
+import { BlogImageSize } from "../interfaces/BlogImageSize";
 
 export async function getSettings() {
   if (state.settings) {
@@ -82,7 +83,7 @@ export const getRoles = async (): Promise<[BlogRole]> => {
   return state.roles;
 };
 
-export async function getImageSizes() {
+export async function getImageSizes(): Promise<BlogImageSize[]> {
   if (state.imageSizes) {
     return Promise.resolve(state.imageSizes);
   }
