@@ -18,7 +18,8 @@ const httpTrigger: AzureFunction = async function (
     return;
   }
 
-  const { file, width, height } = req.query;
+  const { file: rawFile, width, height } = req.query;
+  const file = rawFile.replace(`/${containerName}/`, "");
 
   try {
     const size = await getNearestImageConfigSize(file, {
@@ -26,18 +27,12 @@ const httpTrigger: AzureFunction = async function (
       height: height ? parseInt(height) : 0,
     });
 
-    console.log("NEAREST IMAGE SIZE", size);
-
     const exists = await imageVersionExists(file, size);
     const versionFile = await getVersionFileName(file, size);
-
-    console.log("EXISTS", file, versionFile, exists);
 
     if (!exists) {
       await generateImageVersion(file, size);
     }
-
-    console.log("VERSION FILE", versionFile);
 
     const url = new URL(
       [containerName, versionFile].join("/"),
@@ -58,15 +53,6 @@ const httpTrigger: AzureFunction = async function (
     );
     jsonReply(context, { test: " " }, 400);
   }
-
-  /*
-  context.res = {
-    status: 302,
-    headers: {
-      Location: `${process.env.AZURE_STORAGE_URL}${req.query.file}`,
-    },
-  };
-  */
 };
 
 export default httpTrigger;

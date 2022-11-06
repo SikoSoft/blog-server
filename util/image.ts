@@ -43,10 +43,8 @@ export const addImageVersion = async (
   height: number,
   original: number
 ): Promise<void> => {
-  console.log("addImageVersion", file, width, height, original);
   const connection = await getConnection();
   await connection("images").insert({ file, width, height, original });
-  //state.imageVersions[file] = state.imageVersions[file];
 };
 
 export const getSourceImage = async (file: string): Promise<SourceImage> => {
@@ -54,7 +52,6 @@ export const getSourceImage = async (file: string): Promise<SourceImage> => {
     return Promise.resolve(sourceImages[file]);
   }
 
-  console.log("getSourceImage", containerName, file);
   return new Promise((resolve, reject) => {
     const stream = new MemoryStream();
     blobService.getBlobToStream(containerName, file, stream, async (err) => {
@@ -137,8 +134,6 @@ export async function generateImageVersions(file: string) {
   } catch (error) {
     console.error(`Encountered error from getSourceImage(${file}): ${error}`);
   }
-
-  console.log("generateImageVersion", file, imageSizes);
 }
 
 export async function getNearestImageConfigSize(
