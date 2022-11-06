@@ -13,7 +13,7 @@ import { state } from "./state";
 const blobService = azureStorage.createBlobService();
 export const containerName = "images";
 
-declare interface SourceImage extends BlogImageSize {
+export interface SourceImage extends BlogImageSize {
   buffer: Buffer;
   contentType: string;
 }
@@ -45,6 +45,7 @@ export const addImageVersion = async (
 ): Promise<void> => {
   const connection = await getConnection();
   await connection("images").insert({ file, width, height, original });
+  delete state.imageVersions[file];
 };
 
 export const getSourceImage = async (file: string): Promise<SourceImage> => {
@@ -56,8 +57,9 @@ export const getSourceImage = async (file: string): Promise<SourceImage> => {
     const stream = new MemoryStream();
     blobService.getBlobToStream(containerName, file, stream, async (err) => {
       if (err) {
-        console.error("Encountered error getting blob as stream: ", err);
-        reject();
+        return reject(
+          new Error(`Encountered error getting blob as stream: ${err}`)
+        );
       } else {
         stream.end();
         const buffer = await stream2buffer(stream);
@@ -66,7 +68,7 @@ export const getSourceImage = async (file: string): Promise<SourceImage> => {
         const contentType = await (await fileType.fromBuffer(buffer)).mime;
         const source = { buffer, width, height, contentType };
         sourceImages[file] = source;
-        resolve(source);
+        return resolve(source);
       }
     });
   });
@@ -92,7 +94,6 @@ export async function uploadImage(
       },
       (error) => {
         if (error) {
-          console.error("error encountered", error);
           reject(error);
         }
         resolve();
@@ -101,21 +102,14 @@ export async function uploadImage(
   });
 }
 
-export async function generateImageVersion(file: string, size: BlogImageSize) {
+export async function generateImageVersion(file: string, width: number) {
   const source = await getSourceImage(file);
-  const width: number =
-    size.width === 0
-      ? Math.floor((size.height / source.height) * source.width)
-      : size.width;
-  const height: number =
-    size.height === 0
-      ? Math.floor((size.width / source.width) * source.height)
-      : size.height;
+  const height: number = Math.floor((width / source.width) * source.height);
   if (width < source.width) {
     const resized = await sharp(source.buffer)
       .resize({ width, height, fit: sharp.fit.fill })
       .toBuffer();
-    const newFile = await getVersionFileName(file, size);
+    const newFile = await getVersionFileName(file, width);
     await uploadImage(newFile, resized, source.contentType);
     await addImageVersion(file, width, height, 0);
   } else if (width === source.width) {
@@ -123,84 +117,45 @@ export async function generateImageVersion(file: string, size: BlogImageSize) {
   }
 }
 
-export async function generateImageVersions(file: string) {
-  const imageSizes = await getImageSizes();
-  let source: SourceImage;
-
-  try {
-    source = await getSourceImage(file);
-
-    imageSizes.forEach(async (size) => {});
-  } catch (error) {
-    console.error(`Encountered error from getSourceImage(${file}): ${error}`);
-  }
-}
-
-export async function getNearestImageConfigSize(
-  file: string,
-  configSize: BlogImageSize
-): Promise<BlogImageSize> {
-  let imageSize: BlogImageSize = { width: 0, height: 0 };
-  try {
-    const source = await getSourceImage(file);
-    const sizes = await getImageSizes();
-    sizes.some((size: BlogImageSize) => {
-      const { width, height } = size;
-      if (configSize.width && configSize.width >= width) {
-        imageSize = { width, height };
-        return false;
-      } else if (configSize.height && configSize.height >= height) {
-        imageSize = { width, height };
-        return false;
-      }
-    });
-    if (imageSize.width && !imageSize.height) {
-      imageSize.height = Math.floor(
-        (imageSize.width / source.width) * source.height
-      );
+export async function getNearestImageTargetWidth(
+  width: number
+): Promise<number> {
+  let targetWidth: number = 0;
+  const sizes = await getImageSizes();
+  sizes.some((size: BlogImageSize) => {
+    if (width && width >= size.width) {
+      targetWidth = size.width;
+      return false;
     }
-    if (imageSize.height && !imageSize.width) {
-      imageSize.width = Math.floor(
-        (imageSize.height / source.height) * source.width
-      );
-    }
-  } catch (error) {
-    console.error(
-      `Encountered an error in getNearestImageSize: ${JSON.stringify(error)}`
-    );
-  }
-  return imageSize;
+  });
+
+  return targetWidth;
 }
 
 export async function imageVersionExists(
   file: string,
-  size: BlogImageSize
+  width: number
 ): Promise<boolean> {
   return (await getImageVersions(file)).some(
-    (version) => version.width === size.width && version.height === size.height
+    (version) => version.width === width
   );
 }
 
-export async function getHeightFromWidth(file: string): Promise<number> {
-  let height: number = 0;
-  try {
-    const source = await getSourceImage(file);
-  } catch (error) {
-    console.error(
-      `Encountered an error in getHeightFromWidth: ${JSON.stringify(error)}`
-    );
-  }
-  return height;
+export async function getOriginalImageWidth(file: string): Promise<number> {
+  const filtered = (await getImageVersions(file)).filter(
+    (version) => version.original === 1
+  );
+  return filtered.length ? filtered[0].width : 0;
 }
 
 export async function getVersionFileName(
   file: string,
-  size: BlogImageSize
+  width: number
 ): Promise<string> {
   const fileParts = file.split("/");
   const source = await getSourceImage(file);
-  if (source.width !== size.width) {
-    fileParts.splice(fileParts.length - 1, 0, `${size.width}`);
+  if (source.width !== width) {
+    fileParts.splice(fileParts.length - 1, 0, `${width}`);
   }
   return fileParts.join("/");
 }
