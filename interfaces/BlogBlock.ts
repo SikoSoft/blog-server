@@ -6,6 +6,6 @@ export interface BlogBlock {
   name: string;
   created: number;
   last_edited: number;
-  content?: [BlogBlockContent];
-  context?: [BlogBlockContext];
+  content?: BlogBlockContent[];
+  context?: BlogBlockContext[];
 }

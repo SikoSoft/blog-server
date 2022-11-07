@@ -3,5 +3,5 @@ export interface SentimentAnalysisResponseDocument {
 }
 
 export interface SentimentAnalysisResponse {
-  documents: Array<SentimentAnalysisResponseDocument>;
+  documents: SentimentAnalysisResponseDocument[];
 }

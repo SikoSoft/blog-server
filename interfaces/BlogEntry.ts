@@ -1,6 +1,6 @@
 export interface BlogEntry {
   id: string;
-  furtherReading?: Array<any>;
-  tags: Array<any>;
+  furtherReading?: any[];
+  tags: any[];
   links: Object;
 }
