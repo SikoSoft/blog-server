@@ -12,7 +12,7 @@ const connectionObject = {
   database: process.env.DB_NAME,
 };
 
-const checkInstallation = async () => {
+const checkInstallation = async (): Promise<void> => {
   try {
     setup(connection);
     console.log("Making sure tables are setup correctly...");

@@ -4,7 +4,7 @@ export function pad(x: number, padding: number = 2): string {
   return x.toString().padStart(padding, "0");
 }
 
-export function arrayUnique(array: any): any {
+export function arrayUnique(array: any[]): any[] {
   return [...new Set(array.map((element) => JSON.stringify(element)))].map(
     (element: any) => JSON.parse(element)
   );

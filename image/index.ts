@@ -34,7 +34,7 @@ const httpTrigger: AzureFunction = async function (
 
   let versionFile: string;
 
-  if (originalWidth <= targetWidth) {
+  if (originalWidth !== 0 && originalWidth <= targetWidth) {
     versionFile = file;
   } else {
     versionFile = await getVersionFileName(file, targetWidth);
