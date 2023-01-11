@@ -20,7 +20,7 @@
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "into-stream": "^5.1.1",
-    "knex": "^2.0.0",
+    "knex": "^2.4.0",
     "mysql": "^2.18.1",
     "parse-multipart": "^1.0.4",
     "path": "^0.12.7",
