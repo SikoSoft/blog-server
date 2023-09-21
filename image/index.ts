@@ -43,15 +43,21 @@ const httpTrigger: AzureFunction = async function (
       let source: SourceImage;
       source = await getSourceImage(file);
       if (targetWidth < source.width) {
-        await generateImageVersion(file, targetWidth);
+        context.log(
+          `Attempting generation of image: ${file} (width: ${targetWidth})`
+        );
+        await generateImageVersion(context, file, targetWidth);
       } else if (source.width) {
         versionFile = await getVersionFileName(file, source.width);
         const originalExists = await imageVersionExists(file, source.width);
         if (!originalExists) {
-          await generateImageVersion(file, source.width);
+          context.log(
+            `Attempting generation of image: ${file} (width: ${source.width})`
+          );
+          await generateImageVersion(context, file, source.width);
         }
       } else {
-        console.error("doesnt exist");
+        context.log("doesnt exist");
       }
     }
   }

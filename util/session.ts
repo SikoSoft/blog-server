@@ -9,7 +9,7 @@ export const getIp = (req: HttpRequest): string => {
     : "0.0.0.0";
 };
 
-export async function getSessionRole(sessToken: string = "") {
+export async function getSessionRole(sessToken: string = ""): Promise<number> {
   if (state.session[sessToken] && state.session[sessToken].role) {
     return Promise.resolve(state.session[sessToken].role);
   }
@@ -41,7 +41,7 @@ export async function getSessionRole(sessToken: string = "") {
   });
 }
 
-export async function getSessionRights(sessToken) {
+export async function getSessionRights(sessToken: string): Promise<string[]> {
   if (state.session[sessToken] && state.session[sessToken].rights) {
     return Promise.resolve(state.session[sessToken].rights);
   }

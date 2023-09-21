@@ -3,8 +3,34 @@ import { BlogRole } from "../interfaces/BlogRole";
 import { state } from "./state";
 import { getConnection } from "./database";
 import { BlogImageSize } from "../interfaces/BlogImageSize";
+import { BlogRight } from "../interfaces/BlogRight";
+import { BlogSetting, BlogSettings } from "../interfaces/BlogSettings";
 
-export async function getSettings() {
+export interface SpecSetting {
+  id: string;
+  type: string;
+  dataType: number;
+  listSource?: string;
+  default?: 0 | 1;
+  size?: number;
+}
+
+export function getSpecSetting(id: string): SpecSetting | undefined {
+  return spec.settings.find((setting) => setting.id === id);
+}
+
+export function getInitialSettings(): BlogSettings {
+  const initialSettings = {};
+  Object.values(BlogSetting).forEach((settingId) => {
+    const setting = getSpecSetting(settingId);
+    if (setting) {
+      initialSettings[settingId] = setting.default || "";
+    }
+  });
+  return initialSettings as BlogSettings;
+}
+
+export async function getSettings(): Promise<BlogSettings> {
   if (state.settings) {
     return Promise.resolve(state.settings);
   }
@@ -12,7 +38,7 @@ export async function getSettings() {
     try {
       const connection = await getConnection();
       const settingsRows = await connection.select("*").from("settings");
-      const settings = {};
+      const settings = getInitialSettings();
       for (const setting of spec.settings) {
         const matchedRow = settingsRows.filter(
           (settingRow) => settingRow.id === setting.id
@@ -31,7 +57,7 @@ export async function getSettings() {
   });
 }
 
-export async function getTagRoles() {
+export async function getTagRoles(): Promise<Record<string, number[]>> {
   if (state.tagRoles) {
     return Promise.resolve(state.tagRoles);
   }
@@ -53,7 +79,7 @@ export async function getTagRoles() {
   });
 }
 
-export async function getRoleRights() {
+export async function getRoleRights(): Promise<BlogRight[]> {
   if (state.rights) {
     return Promise.resolve(state.rights);
   }
@@ -69,7 +95,7 @@ export async function getRoleRights() {
   });
 }
 
-export const getRoles = async (): Promise<[BlogRole]> => {
+export const getRoles = async (): Promise<BlogRole[]> => {
   if (state?.roles?.length) {
     return state.roles;
   }

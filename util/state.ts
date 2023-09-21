@@ -1,12 +1,13 @@
-const initialState = {
+import { BlogState } from "../interfaces/BlogState";
+
+const initialState: BlogState = {
   roles: [],
-  filtersRules: [],
   session: {},
   excludedEntries: {},
   imageVersions: {},
 };
 
-export let state = { ...JSON.parse(JSON.stringify(initialState)) };
+export let state: BlogState = { ...JSON.parse(JSON.stringify(initialState)) };
 
 export const flushState = (key?: string): void => {
   if (key) {

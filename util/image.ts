@@ -9,6 +9,7 @@ import { getImageSizes } from "./config";
 import { stream2buffer } from "./data";
 import { getConnection } from "./database";
 import { state } from "./state";
+import { Context } from "@azure/functions";
 
 const blobService = azureStorage.createBlobService();
 export const containerName = "images";
@@ -102,18 +103,26 @@ export async function uploadImage(
   });
 }
 
-export async function generateImageVersion(file: string, width: number) {
-  const source = await getSourceImage(file);
-  const height: number = Math.floor((width / source.width) * source.height);
-  if (width < source.width) {
-    const resized = await sharp(source.buffer)
-      .resize({ width, height, fit: sharp.fit.fill })
-      .toBuffer();
-    const newFile = await getVersionFileName(file, width);
-    await uploadImage(newFile, resized, source.contentType);
-    await addImageVersion(file, width, height, 0);
-  } else if (width === source.width) {
-    await addImageVersion(file, source.width, source.height, 1);
+export async function generateImageVersion(
+  context: Context,
+  file: string,
+  width: number
+) {
+  try {
+    const source = await getSourceImage(file);
+    const height: number = Math.floor((width / source.width) * source.height);
+    if (width < source.width) {
+      const resized = await sharp(source.buffer)
+        .resize({ width, height, fit: sharp.fit.fill })
+        .toBuffer();
+      const newFile = await getVersionFileName(file, width);
+      await uploadImage(newFile, resized, source.contentType);
+      await addImageVersion(file, width, height, 0);
+    } else if (width === source.width) {
+      await addImageVersion(file, source.width, source.height, 1);
+    }
+  } catch (error) {
+    context.log(`ERROR generating image version: ${file} | ${width}, ${error}`);
   }
 }
 
