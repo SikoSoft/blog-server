@@ -29,6 +29,7 @@ export async function getConnection(): Promise<Knex> {
       connection: connectionObject,
     });
     const modelsHash = getModelsHash();
+    console.log(`Spec models hash: ${modelsHash}`);
     if (
       !process.env.SPEC_MODELS_HASH ||
       process.env.SPEC_MODELS_HASH !== modelsHash
