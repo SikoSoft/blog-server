@@ -1,17 +1,19 @@
-import azureStorage from "azure-storage";
+import "dotenv/config";
+import { BlobServiceClient, BlockBlobClient } from "@azure/storage-blob";
 import intoStream from "into-stream";
-import MemoryStream from "memorystream";
 import sharp from "sharp";
 import fileType from "file-type";
 import { BlogImage } from "../interfaces/BlogImage";
 import { BlogImageSize } from "../interfaces/BlogImageSize";
 import { getImageSizes } from "./config";
-import { stream2buffer } from "./data";
 import { getConnection } from "./database";
 import { state } from "./state";
 import { Context } from "@azure/functions";
 
-const blobService = azureStorage.createBlobService();
+const blobService = BlobServiceClient.fromConnectionString(
+  process.env.AZURE_STORAGE_CONNECTION_STRING
+);
+
 export const containerName = "images";
 
 export interface SourceImage extends BlogImageSize {
@@ -54,24 +56,21 @@ export const getSourceImage = async (file: string): Promise<SourceImage> => {
     return Promise.resolve(sourceImages[file]);
   }
 
-  return new Promise((resolve, reject) => {
-    const stream = new MemoryStream();
-    blobService.getBlobToStream(containerName, file, stream, async (err) => {
-      if (err) {
-        return reject(
-          new Error(`Encountered error getting blob as stream: ${err}`)
-        );
-      } else {
-        stream.end();
-        const buffer = await stream2buffer(stream);
-        const metaData = await sharp(buffer).metadata();
-        const { width, height } = metaData;
-        const contentType = await (await fileType.fromBuffer(buffer)).mime;
-        const source = { buffer, width, height, contentType };
-        sourceImages[file] = source;
-        return resolve(source);
-      }
-    });
+  return new Promise(async (resolve, reject) => {
+    const blobClient = getBlobClient(file);
+    const response = await blobClient.downloadToBuffer();
+
+    if (response) {
+      const buffer = response;
+      const metaData = await sharp(buffer).metadata();
+      const { width, height } = metaData;
+      const contentType = await (await fileType.fromBuffer(buffer)).mime;
+      const source = { buffer, width, height, contentType };
+      sourceImages[file] = source;
+      return resolve(source);
+    } else {
+      reject();
+    }
   });
 };
 
@@ -79,27 +78,20 @@ export async function uploadImage(
   file: string,
   buffer: Buffer,
   contentType: string
-) {
+): Promise<void> {
   const stream = intoStream(buffer);
   const streamLength = buffer.length;
-  return new Promise<void>((resolve, reject) => {
-    blobService.createBlockBlobFromStream(
-      containerName,
-      file,
-      stream,
-      streamLength,
-      {
-        contentSettings: {
-          contentType,
-        },
-      },
-      (error) => {
-        if (error) {
-          reject(error);
-        }
-        resolve();
-      }
-    );
+  return new Promise<void>(async (resolve, reject) => {
+    const blobClient = getBlobClient(file);
+
+    const response = await blobClient.uploadStream(stream, streamLength, 5, {
+      blobHTTPHeaders: { blobContentType: contentType },
+    });
+    if (response.errorCode) {
+      reject(response.errorCode);
+    } else {
+      resolve();
+    }
   });
 }
 
@@ -167,4 +159,8 @@ export async function getVersionFileName(
     fileParts.splice(fileParts.length - 1, 0, `${width}`);
   }
   return fileParts.join("/");
+}
+
+export function getBlobClient(file: string): BlockBlobClient {
+  return blobService.getContainerClient(containerName).getBlockBlobClient(file);
 }
