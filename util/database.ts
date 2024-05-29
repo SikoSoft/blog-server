@@ -25,7 +25,7 @@ export async function getConnection(): Promise<Knex> {
   if (!connection) {
     console.log("No database connection yet; creating one now...");
     connection = knex({
-      client: "mysql",
+      client: process.env.DB_TYPE,
       connection: connectionObject,
     });
     const modelsHash = getModelsHash();
