@@ -10,6 +10,7 @@ const connectionObject = {
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
+  ...(process.env.DB_SSL === "1" ? { ssl: { rejectUnauthorized: false } } : {}),
 };
 
 const checkInstallation = async (): Promise<void> => {
@@ -27,6 +28,7 @@ export async function getConnection(): Promise<Knex> {
     connection = knex({
       client: process.env.DB_TYPE,
       connection: connectionObject,
+      searchPath: [process.env.DB_SCHEMA],
     });
     const modelsHash = getModelsHash();
     console.log(`Spec models hash: ${modelsHash}`);
