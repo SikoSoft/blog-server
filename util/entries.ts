@@ -127,7 +127,7 @@ export const getId = async (title: string): Promise<string> => {
       const qRes = await connection
         .select("id")
         .from("entries")
-        .whereRaw("id REGEXP ?", [id]);
+        .whereRaw("id LIKE ?", [id]);
       resolve(qRes.length === 0 ? id : `${id}-${qRes.length + 1}`);
     } catch (error) {
       reject(error);
