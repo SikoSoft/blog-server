@@ -2,6 +2,7 @@ import { HttpRequest } from "@azure/functions";
 import { getSettings, getRoleRights } from "./config";
 import { getConnection } from "./database";
 import { state } from "./state";
+import { Identity } from "@ss/identity";
 
 export const getIp = (req: HttpRequest): string => {
   return req.headers["x-forwarded-for"]
@@ -10,6 +11,28 @@ export const getIp = (req: HttpRequest): string => {
 };
 
 export async function getSessionRole(sessToken: string = ""): Promise<number> {
+  if (state.session[sessToken] && state.session[sessToken].role) {
+    return Promise.resolve(state.session[sessToken].role);
+  }
+
+  const hasRoleResult = await Identity.hasRole(sessToken, "blog-admin");
+
+  const settings = await getSettings();
+
+  let role = settings.role_guest;
+
+  if (hasRoleResult.isOk && hasRoleResult.value) {
+    role = settings.role_admin;
+  }
+
+  state.session[sessToken] = state.session[sessToken]
+    ? { ...state.session[sessToken], role }
+    : { role };
+
+  return role;
+}
+
+export async function _getSessionRole(sessToken: string = ""): Promise<number> {
   if (state.session[sessToken] && state.session[sessToken].role) {
     return Promise.resolve(state.session[sessToken].role);
   }
