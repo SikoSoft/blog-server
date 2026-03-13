@@ -11,17 +11,26 @@ export const getIp = (req: HttpRequest): string => {
 };
 
 export async function getSessionRole(sessToken: string = ""): Promise<number> {
+  console.log("Getting session role for token:", sessToken);
   if (state.session[sessToken] && state.session[sessToken].role) {
-    return Promise.resolve(state.session[sessToken].role);
+    console.log(
+      "Session role found in state cache:",
+      state.session[sessToken].role
+    );
+    return state.session[sessToken].role;
   }
 
   const hasRoleResult = await Identity.hasRole(sessToken, "blog-admin");
-
+  console.log("Checking if user has blog-admin role:", hasRoleResult);
   const settings = await getSettings();
 
   let role = settings.role_guest;
 
   if (hasRoleResult.isOk && hasRoleResult.value) {
+    console.log(
+      "User has blog-admin role, granting admin access",
+      settings.role_admin
+    );
     role = settings.role_admin;
   }
 
@@ -66,14 +75,15 @@ export async function _getSessionRole(sessToken: string = ""): Promise<number> {
 
 export async function getSessionRights(sessToken: string): Promise<string[]> {
   if (state.session[sessToken] && state.session[sessToken].rights) {
-    return Promise.resolve(state.session[sessToken].rights);
+    return state.session[sessToken].rights;
   }
+
   return new Promise(async (resolve, reject) => {
     try {
       const rights = await getRoleRights();
       const role = await getSessionRole(sessToken);
       const sessionRights = rights
-        .filter((right) => role === right.role)
+        .filter((right) => Number(role) === Number(right.role))
         .map((right) => right.action);
       state.session[sessToken] = state.session[sessToken]
         ? { ...state.session[sessToken], rights: sessionRights }

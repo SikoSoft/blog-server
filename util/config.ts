@@ -70,7 +70,7 @@ export async function getTagRoles(): Promise<Record<string, number[]>> {
         if (!state.tagRoles[row.tag]) {
           state.tagRoles[row.tag] = [];
         }
-        state.tagRoles[row.tag].push(row.role);
+        state.tagRoles[row.tag].push(Number(row.role));
       });
       resolve(state.tagRoles);
     } catch (error) {
@@ -86,7 +86,12 @@ export async function getRoleRights(): Promise<BlogRight[]> {
   return new Promise(async (resolve, reject) => {
     try {
       const connection = await getConnection();
-      const rights = await connection.select("*").from("roles_rights");
+      const rights = (await connection.select("*").from("roles_rights")).map(
+        (row) => ({
+          ...row,
+          role: row.role === undefined ? undefined : Number(row.role),
+        })
+      );
       state.rights = rights;
       resolve(rights);
     } catch (error) {
