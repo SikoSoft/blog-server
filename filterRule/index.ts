@@ -16,23 +16,42 @@ const httpTrigger: AzureFunction = async function (
     typeof req.body === "string" ? parse(req.body) : req.body ? req.body : {};
   const connection = await getConnection();
   if (req.method === "POST") {
-    const res = await connection("filters_rules").insert({
-      filter_id: body.filter,
-      type: body.type,
-      value: body.value,
-      operator: body.operator,
-    });
+    const inserted = (await connection("filters_rules")
+      .insert({
+        filter_id: body.filter,
+        type: body.type,
+        value: body.value,
+        operator: body.operator,
+      })
+      .returning("id")) as Array<number | string | { id: number | string }>;
+
+    const firstInserted = inserted[0];
+    const insertedId =
+      typeof firstInserted === "object" && firstInserted
+        ? firstInserted.id
+        : firstInserted;
+    const numericInsertedId = Number(insertedId);
+
+    if (!Number.isFinite(numericInsertedId)) {
+      jsonReply(context, {
+        success: false,
+        error: "Failed to determine inserted filter rule id",
+      });
+      return;
+    }
+
+    console.log("Inserted filter rule with ID:", numericInsertedId);
     const filterRule = await connection
       .select("*")
       .from("filters_rules")
-      .where("id", res[0])
+      .where("id", numericInsertedId)
       .first();
     jsonReply(context, {
-      id: res,
+      id: numericInsertedId,
       success: true,
       filterRule: {
         ...filterRule,
-        links: await getLinks(req, "filterRule", res[0]),
+        links: await getLinks(req, "filterRule", numericInsertedId),
       },
     });
   } else if (req.method === "PUT") {
