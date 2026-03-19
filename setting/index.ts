@@ -19,7 +19,8 @@ const httpTrigger: AzureFunction = async function (
   const qRes = await connection("settings")
     .insert({ id: context.bindingData.id, [field]: body.value })
     .onConflict("id")
-    .merge();
+    .merge()
+    .returning("id");
   const success = qRes.length >= 1 ? true : false;
   if (success) {
     flushState("settings");
